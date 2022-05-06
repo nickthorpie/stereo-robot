@@ -57,16 +57,21 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]](https://pybullet.org/wordpress/)
+![Product Name Screen Shot](docs/readme/live_demo.png)
 
 This project is the backend for an autonomous warehouse solution built for [SigmaPoint](https://www.sigmapoint.com). 
 This project uses a stereo depth camera connected to an NVIDIA Jetson Nano to perform object detection,
 line following, and QR code scanning. See the paper linked at the top to learn more about the design.
 
-
 <p align="right">(<a href="#top">back to top</a>)</p>
 
+<!-- Motivation -->
+## About The Project
+Our client approached us to design a solution to atonomously move ULINE parts racks from one place to another in factory environment. The solution needed to operate safely and efficiently, with scalability in mind.
+![Product Name Screen Shot](docs/readme/rack.png)
 
+
+<p align="right">(<a href="#top">back to top</a>)</p>
 
 
 
