@@ -16,11 +16,13 @@
   <p align="center">
     Autonomous navigation using a stereo camera
     <br />
-    <a href="https://github.com/nickthorpie/StereoRobot/tree/master/resources/MECH_460_Final_Report_Team_03.pdf"><strong>Explore the Paper »</strong></a>
+    <a href="https://stereo-robot.readthedocs.io/"><strong>Read The Docs »</strong></a>
     <br />
-    <a href="https://github.com/nickthorpie/StereoRobot">Report Bug</a>
+    <a href="https://github.com/nickthorpie/stereo-robot/issues/tree/main/docs/papers">Read the Papers</a>
+    .
+    <a href="https://github.com/nickthorpie/stereo-robot">Report Bug</a>
     ·
-    <a href="https://github.com/nickthorpie/StereoRobot/issues">Request Feature</a>
+    <a href="https://github.com/nickthorpie/stereo-robot/issues">Request Feature</a>
   </p>
 </div>
 
@@ -60,26 +62,82 @@
 ![Product Name Screen Shot](docs/readme/live_demo.png)
 
 This project is the backend for an autonomous warehouse solution built for [SigmaPoint](https://www.sigmapoint.com). 
-This project uses a stereo depth camera connected to an NVIDIA Jetson Nano to perform object detection,
+This project uses a stereo depth camera connected to a Raspberry Pi to perform object detection,
 line following, and QR code scanning. See the paper linked at the top to learn more about the design.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-<!-- Motivation -->
-## About The Project
-Our client approached us to design a solution to atonomously move ULINE parts racks from one place to another in factory environment. The solution needed to operate safely and efficiently, with scalability in mind.
+### Project Background
+Our client approached us to design a solution to atonomously move ULINE racks from one place to another in a factory environment.
 ![Product Name Screen Shot](docs/readme/rack.png)
+The solution needed to operate safely and efficiently, with attention to scalability. We identified three main subsystems that the robots sensors must address:
+- Local navigation (how does it navigate through a corridor)
+- Global navigation (how does it know which turns to take)
+- Collision avoidance (how does it avoid obstacles)
+
+To ensure scalability, we considered that active sensors such as lidar should be ruled out. We decided a computer vision
+solution could address scalability issues and fulfill the requirements for each subsystem. The system addresses the subsystems
+in the following ways:
+1. **Local Navigation: Line following** \
+   The robot uses traditional computer vision techniques to identify a line, and follow it along corridors.
+2. **Global navigation: QR Checkpoints** \
+   The yellow tape is set up in a grid pattern throughout the factory. A QR code is placed at every intersection,
+   and the camera reads it to update its current location and compare it with an internally stored map.
+3. **Collision Avoidance: Stereo Vision** \
+   The stereo camera is used to calculate a depth map using traditional stereo mapping techniques. A simple
+   histogram technique identifies the obstacles and the robot is repelled from them accordingly.
+   
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+### Project Motivation
+The project was initially conceived with modern machine learning techniques in mind. We hoped to use a GPU equipped microprocessor
+such as the Jetson Nano, however the post-pandemic microprocessor shortage forced us to use a Raspberry Pi 4 for prototyping.
+As such, I worked hard to create a backend that could achieve CV based navigation using dramatically less processing power.
+I am continuing to restructure the current project to build out plug-and-play modularity as machine learning models get smaller and 
+GPU availability returns to normal.
 
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
+### Roadmap
+
+- [x] Camera Processing
+    - [x] Line identification
+    - [ ] Depth Processing
+    - [x] QR Reader
+- [ ] Navigation
+    - [x] Vector Force Field
+    - [ ] Node Container
+    - [ ] A*
+- [ ] GUI
+    - [x] Line Following
+        - [x] Thresholding
+        - [x] ROI Selection
+    - [ ] Connected Nodes builder
+    - [x] Movement Calibration
+        - [x] Sabertooth Calibration
+- [ ] Project Structure
+    - [ ] Config Module
+    - [x] Multiprocessing Framework
+- [ ] User Documentation
+    - [x] Software installation 
+    - [x] Wiring
+    - [ ] Robot Build
+        - [ ] Chassis Assembly
+        - [ ] Engineering Drawings
+    - [ ] Operation Manual
+- [ ] Code Documentation
+    - [x] main
+    - [x] Camera Utilities
+    - [ ] Direction Control
+    
+### Future Steps
 
 
 <!-- GETTING STARTED -->
 ## Getting Started
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
+TBD
 
 ### Prerequisites
 
@@ -101,34 +159,6 @@ Clone the repo
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
-
-
-<p align="right">(<a href="#top">back to top</a>)</p>
-
-
-
-<!-- ROADMAP -->
-## Roadmap
-
-- [x] Simulation
-    - [x] Create PyBullet Simulation
-    - [x] Create virtual connections (motor control, camera reading)
-- [ ] Camera Processing
-    - [ ] Line identification
-    - [ ] Blob detection
-    - [ ] QR Reader
-- [ ] Global Navigation
-    - [ ] Node Container
-    - [ ] A*
-- [ ] Local Navigation
-    - [ ] Vector Force Field
-- [ ] GUI
-    - [ ] Camera Processing Sliders
-    - [ ] Vect Force Field Calibration
-    - [ ] Connected Nodes
-    
 
 See the [open issues](https://github.com/nickthorpie/StereoRobot/issues) for a full list of proposed features (and known issues).
 
@@ -166,9 +196,9 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Nick Thorpe -  - 16njft@queensu.ca
+Nick Thorpe -  - nickthorpie@gmail.com
 
-Project Link: [https://github.com/nickthorpie/StereoRobot](https://github.com/nickthorpie/StereoRobot)
+Project Link: [https://github.com/nickthorpie/stereo-robot](https://github.com/nickthorpie/stereo-robot)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
