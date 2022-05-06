@@ -9,7 +9,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <img src="./docs/readme/logo.png" alt="Logo" width="80" height="80">
+  <img src="docs/readme/logo.png" alt="Logo" width="80" height="80">
   
 <h3 align="center">StereoRobot</h3>
 
@@ -63,9 +63,6 @@ This project is the backend for an autonomous warehouse solution built for [Sigm
 This project uses a stereo depth camera connected to an NVIDIA Jetson Nano to perform object detection,
 line following, and QR code scanning. See the paper linked at the top to learn more about the design.
 
-To minimize the time between robot assembly and software implementation, this project uses PyBullet to trial the software
-in a simulated environment.
-
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -82,15 +79,7 @@ To get a local copy up and running follow these simple example steps.
 ### Prerequisites
 
 This is an example of how to list things you need to use the software and how to install them.
-* python == 3.8
-  ```sh
-  conda env -n StereoRobot python=3.8
-  conda activate StereoRobot
-  ```
-* pyBullet
-  ```sh
-  pip install pybullet
-  ```
+
 * OpenCV
   ```
   pip install opencv-python
@@ -100,7 +89,7 @@ This is an example of how to list things you need to use the software and how to
 
 Clone the repo
    ```sh
-   git clone https://github.com/nickthorpie/StereoRobot.git
+   git clone https://github.com/nickthorpie/stereo-robot.git
    ```
 
 
