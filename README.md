@@ -11,14 +11,14 @@
 <div align="center">
   <img src="docs/readme/logo.png" alt="Logo" width="80" height="80">
   
-<h3 align="center">StereoRobot</h3>
+<h3 align="center">stereo-robot</h3>
 
   <p align="center">
     Autonomous navigation using a stereo camera
     <br />
     <a href="https://stereo-robot.readthedocs.io/"><strong>Read The Docs »</strong></a>
     <br />
-    <a href="https://github.com/nickthorpie/stereo-robot/issues/tree/main/docs/papers">Read the Papers</a>
+    <a href="https://github.com/nickthorpie/stereo-robot/tree/main/docs/papers">Read the Papers</a>
     .
     <a href="https://github.com/nickthorpie/stereo-robot">Report Bug</a>
     ·
