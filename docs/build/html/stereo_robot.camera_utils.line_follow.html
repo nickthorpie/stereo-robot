@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>stereo_robot.camera_utils.line_follow package &mdash; stereo-robot 0.0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="stereo_robot.motor_control package" href="stereo_robot.motor_control.html" />
+    <link rel="prev" title="stereo_robot.camera_utils package" href="stereo_robot.camera_utils.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> stereo-robot
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source_code.html">Stereo Robot Source Code</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">stereo-robot</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="source_code.html">Stereo Robot Source Code</a> &raquo;</li>
+          <li><a href="stereo_robot.html">stereo_robot package</a> &raquo;</li>
+          <li><a href="stereo_robot.camera_utils.html">stereo_robot.camera_utils package</a> &raquo;</li>
+      <li>stereo_robot.camera_utils.line_follow package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/stereo_robot.camera_utils.line_follow.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-stereo_robot.camera_utils.line_follow">
+<span id="stereo-robot-camera-utils-line-follow-package"></span><h1>stereo_robot.camera_utils.line_follow package<a class="headerlink" href="#module-stereo_robot.camera_utils.line_follow" title="Permalink to this headline"></a></h1>
+<p>testing123testing</p>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline"></a></h2>
+</section>
+<section id="module-stereo_robot.camera_utils.line_follow.ROI_select">
+<span id="stereo-robot-camera-utils-line-follow-roi-select-module"></span><h2>stereo_robot.camera_utils.line_follow.ROI_select module<a class="headerlink" href="#module-stereo_robot.camera_utils.line_follow.ROI_select" title="Permalink to this headline"></a></h2>
+<p>Interactive GUI for selecting the region of interest.</p>
+<p>This function should only be called from an if __name__==”__main__” wrapper,
+and has a catcher if not. The script has 2 menus</p>
+<dl>
+<dt>Controls:</dt><dd><div class="line-block">
+<div class="line"><strong>[Double Click]</strong>   - Select ROI corner. Make selection in the order BL, TL, TR, BR.</div>
+<div class="line"><strong>[z]</strong>              - Undoes the most recent ROI corner</div>
+<div class="line"><strong>[s]</strong>              - Saves ROI points to ROI_select.json. Will only save if 4 corners are selected</div>
+<div class="line"><strong>[q]</strong>              - Exit GUI</div>
+</div>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Need to change save location from the json method to the Config Module. Further, this should be converted to SI units instead of pixels as discussed in NEXT STEPS -&gt; CONVERT TO SI</p>
+<p>This GUI should probably be moved to the calibration function. Result is saved in a ROI_select.json file. This should be converted to work with the new Config module.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="stereo_robot.camera_utils.line_follow.ROI_select.cam_read">
+<span class="sig-prename descclassname"><span class="pre">stereo_robot.camera_utils.line_follow.ROI_select.</span></span><span class="sig-name descname"><span class="pre">cam_read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">camera</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/stereo_robot/camera_utils/line_follow/ROI_select.html#cam_read"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stereo_robot.camera_utils.line_follow.ROI_select.cam_read" title="Permalink to this definition"></a></dt>
+<dd><p>Camera utility to retrieve and split a stereo pair frame.</p>
+<p class="rubric">Notes</p>
+<p>This function is sprinkled in almost every module to be used in the __name__==”__main__” scrip test. Instances of this utility should be placed in one module.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="stereo_robot.camera_utils.line_follow.ROI_select.perspective_transform">
+<span class="sig-prename descclassname"><span class="pre">stereo_robot.camera_utils.line_follow.ROI_select.</span></span><span class="sig-name descname"><span class="pre">perspective_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orig_frame_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">desired_roi_points</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/stereo_robot/camera_utils/line_follow/ROI_select.html#perspective_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stereo_robot.camera_utils.line_follow.ROI_select.perspective_transform" title="Permalink to this definition"></a></dt>
+<dd><p>Perform the perspective transform.</p>
+<p>Calculates the perspective transform’s transformation matrix and transforms frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>frame</strong> (<em>&lt;class 'numpy.ndarray'&gt;</em>) – Current frame</p></li>
+<li><p><strong>orig_frame_shape</strong> (<em>tuple of int</em>) – The shape of the original frame</p></li>
+<li><p><strong>roi_points</strong> (<em>&lt;class 'numpy.ndarray'&gt;</em>) – ROI points selected using ROI_select.py</p></li>
+<li><p><strong>desired_roi_points</strong> (<em>&lt;class 'numpy.ndarray'&gt;</em>) – The shape of the original frame</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>warped_frame</strong> (<em>&lt;class ‘numpy.ndarray’&gt;</em>) – The  birds-eye-view frame.  [dtype=uint8], [size=(h,w,3)]</p></li>
+<li><p><strong>inv_transformation_matrix</strong> (<em>&lt;class ‘numpy.ndarray’&gt;</em>) – the transformation matrix used to convert birds eye view coords to original frame coords</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>From Addison Sears Collins:</p>
+<blockquote>
+<div><div class="line-block">
+<div class="line">“Imagine you’re a bird. You’re flying high above the road lanes below.  From a birds-eye view, the lines on either side of the lane look like they are parallel</div>
+<div class="line">However, from the perspective of the camera mounted on a car below, the lane lines make a trapezoid-like shape. We can’t properly calculate the radius of curvature of the lane because, from the camera’s perspective, the lane width appears to decrease the farther away you get from the car.</div>
+<div class="line">In fact, way out on the horizon, the lane lines appear to converge to a point (known in computer vision jargon as vanishing point).</div>
+</div>
+</div></blockquote>
+<p>This is different from the one found in line_follow_main because it calculates perspective transform every time since it is changes every time we change the ROI corners. It’s slower, but we don’t need speed for this routine.</p>
+</dd></dl>
+
+</section>
+<section id="module-stereo_robot.camera_utils.line_follow.calib_color_thresh">
+<span id="stereo-robot-camera-utils-line-follow-calib-color-thresh-module"></span><h2>stereo_robot.camera_utils.line_follow.calib_color_thresh module<a class="headerlink" href="#module-stereo_robot.camera_utils.line_follow.calib_color_thresh" title="Permalink to this headline"></a></h2>
+<p>NO DOCS YET SORRY</p>
+</section>
+<section id="module-stereo_robot.camera_utils.line_follow.dijkstras_algorithm">
+<span id="stereo-robot-camera-utils-line-follow-dijkstras-algorithm-module"></span><h2>stereo_robot.camera_utils.line_follow.dijkstras_algorithm module<a class="headerlink" href="#module-stereo_robot.camera_utils.line_follow.dijkstras_algorithm" title="Permalink to this headline"></a></h2>
+<p>NO DOCS YET SORRY</p>
+</section>
+<section id="module-stereo_robot.camera_utils.line_follow.line_follow_main">
+<span id="stereo-robot-camera-utils-line-follow-line-follow-main-module"></span><h2>stereo_robot.camera_utils.line_follow.line_follow_main module<a class="headerlink" href="#module-stereo_robot.camera_utils.line_follow.line_follow_main" title="Permalink to this headline"></a></h2>
+<p>A collection of functions that are inspired/borrowed from AutomaticAddison’s <a class="reference external" href="https://automaticaddison.com/the-ultimate-guide-to-real-time-lane-detection-using-opencv/&gt;">tutorial</a> using the Sliding Window Technique.</p>
+<p>This</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="stereo_robot.camera_utils.line_follow.line_follow_main.LineFollow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stereo_robot.camera_utils.line_follow.line_follow_main.</span></span><span class="sig-name descname"><span class="pre">LineFollow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_frame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/stereo_robot/camera_utils/line_follow/line_follow_main.html#LineFollow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stereo_robot.camera_utils.line_follow.line_follow_main.LineFollow" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A container to initialize, store and access find_line and it’s attributes.</p>
+<p>Look at LineFollow.find_line for details about how this works</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>init_frame</strong> (<em>&lt;class 'numpy.ndarray'&gt;</em>) – a camera frame used to get size information used for find_line</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>self</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This class also contains QR reading. See QR_scan for some implementation notes and future changes.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#stereo_robot.camera_utils.line_follow.line_follow_main.get_perspective_transform_matricies" title="stereo_robot.camera_utils.line_follow.line_follow_main.get_perspective_transform_matricies"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_perspective_transform_matricies</span></code></a></p>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stereo_robot.camera_utils.line_follow.line_follow_main.LineFollow.CONFIG">
+<span class="sig-name descname"><span class="pre">CONFIG</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'padding_percentage':</span> <span class="pre">0.25,</span> <span class="pre">'plot':</span> <span class="pre">True}</span></em><a class="headerlink" href="#stereo_robot.camera_utils.line_follow.line_follow_main.LineFollow.CONFIG" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stereo_robot.camera_utils.line_follow.line_follow_main.LineFollow.QR_scan">
+<span class="sig-name descname"><span class="pre">QR_scan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">warped_frame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/stereo_robot/camera_utils/line_follow/line_follow_main.html#LineFollow.QR_scan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stereo_robot.camera_utils.line_follow.line_follow_main.LineFollow.QR_scan" title="Permalink to this definition"></a></dt>
+<dd><p>Checks birds eye view for barcodes
+:param warped_frame: The thresholded birds-eye-view frame.  [dtype=uint8], [size=(h,w)]
+:type warped_frame: &lt;class ‘numpy.ndarray’&gt;</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>barcodeData</strong> (<em>str or None</em>) – The contents of the QR code. Returns None if no QR code was detected</p></li>
+<li><p><strong>cv2_rectangle</strong> (<em>tuple of args or None</em>) – A set of arguments to overlay a bounding box with cv2.Rectangle. see usage for example.</p></li>
+<li><p><strong>cv2_putText</strong> (<em>tuple of args or None</em>) – A set of arguments to overlay barcodeData in cv2.Rectangle. see usage for example.</p></li>
+<li><p><em>Usage</em></p></li>
+<li><p><em>—–</em></p></li>
+<li><p><em>&gt;&gt;&gt; barcodeData,cv2_rectangle,cv2_putText = LineFollow.QR_scan(warped_frame)</em></p></li>
+<li><p><em>&gt;&gt;&gt; if barcodeData is not None</em></p></li>
+<li><p><em>…     cv2.putText(warped_frame,*cv2_putText)</em></p></li>
+<li><p><em>…     cv2.rectangle(warped_frame,*cv2_rectangle)</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Would be cleaner to have QR scanning happen outside of this class. As a continuation of the notes in line_follow, one solution of this is to warp the frame outside of this class and pass the warped frame in. If this were done, QR_scan could be moved to its own module about global navigation. The warped frame would be passed in to it at the camera_client level instead, where camera client could fork another process for QR reading.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stereo_robot.camera_utils.line_follow.line_follow_main.LineFollow.find_line">
+<span class="sig-name descname"><span class="pre">find_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/stereo_robot/camera_utils/line_follow/line_follow_main.html#LineFollow.find_line"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stereo_robot.camera_utils.line_follow.line_follow_main.LineFollow.find_line" title="Permalink to this definition"></a></dt>
+<dd><p>Processes a frame to detect Line, and QR code.</p>
+<p>This processes the</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>frame</strong> (<em>&lt;class 'numpy.ndarray'&gt;</em>) – Current frame</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>ret</strong> (<em>bool</em>) – True if a lane line or barcode were detected</p></li>
+<li><p><strong>lane_line_markings_col</strong> (<em>&lt;class ‘numpy.ndarray’&gt;</em>) – The warped and thresholded frame annotated with line top/bottom and QR code result. [size=(h,w,3)]</p></li>
+<li><p><strong>result</strong> (<em>&lt;class ‘numpy.ndarray’&gt;</em>) – The original frame annotated with line the fit line and QR code result.</p></li>
+<li><p><strong>p1</strong> (<em>tuple of int</em>) – bottom coordinate of line in the warped coordinate system</p></li>
+<li><p><strong>p2</strong> (<em>tuple of int</em>) – top coordinate of line in the warped coordinate system</p></li>
+<li><p><strong>confidence</strong> (<em>int</em>) – confidence estimate of the line. (0-100)</p></li>
+<li><p><strong>barcodeData</strong> (<em>str or None</em>) – the data from the scanned barcode. If no new data is found, the value is none.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<dl class="simple">
+<dt>Psuedo Code for this function:</dt><dd><ul class="simple">
+<li><p>Warps frame to birds eye view</p></li>
+<li><p>Scans QR code.</p></li>
+<li><p>Thresholds line markings</p></li>
+<li><p>Fits curve to line with confidence</p></li>
+<li><p>Creates overlay</p></li>
+</ul>
+</dd>
+</dl>
+<p>May be better to threshold before warp for line following, however the warp is used in QR code scanning too so it currently makes more sense to warp the full picture. I also don’t like that QR scanning happens inline with the line following. It slows down loop times. If I were to prioritize things for safety, person detection should be first priority, line following should be second priority, and QR should be third. May be better to move QR scanning into its own process, however we already have 3 processes and only 4 cores.</p>
+<p>Should add functionality to disable plotting and save steps</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">stereo_robot.camera_utils.line_follow.ROI_select.main</span></code></dt><dd><p>A UI is used to select the roi_points</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">stereo_robot.camera_utils.line_follow.calib_color_thresh.main</span></code></dt><dd><p>A UI used to select yellow Threshold</p>
+</dd>
+<dt><a class="reference internal" href="#stereo_robot.camera_utils.line_follow.line_follow_main.get_line_markings" title="stereo_robot.camera_utils.line_follow.line_follow_main.get_line_markings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_line_markings</span></code></a></dt><dd><p>Thresholds line markings</p>
+</dd>
+<dt><a class="reference internal" href="#stereo_robot.camera_utils.line_follow.line_follow_main.get_lane_line_indices_sliding_windows" title="stereo_robot.camera_utils.line_follow.line_follow_main.get_lane_line_indices_sliding_windows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_lane_line_indices_sliding_windows</span></code></a></dt><dd><p>Fits curve to line with confidence</p>
+</dd>
+<dt><a class="reference internal" href="#stereo_robot.camera_utils.line_follow.line_follow_main.get_lane_line_previous_window" title="stereo_robot.camera_utils.line_follow.line_follow_main.get_lane_line_previous_window"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_lane_line_previous_window</span></code></a></dt><dd><p>Gets points fit curve for overlay</p>
+</dd>
+<dt><a class="reference internal" href="#stereo_robot.camera_utils.line_follow.line_follow_main.LineFollow.QR_scan" title="stereo_robot.camera_utils.line_follow.line_follow_main.LineFollow.QR_scan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LineFollow.QR_scan</span></code></a></dt><dd><p>looks for QR</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="stereo_robot.camera_utils.line_follow.line_follow_main.calculate_histogram_vert">
+<span class="sig-prename descclassname"><span class="pre">stereo_robot.camera_utils.line_follow.line_follow_main.</span></span><span class="sig-name descname"><span class="pre">calculate_histogram_vert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">warped_frame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/stereo_robot/camera_utils/line_follow/line_follow_main.html#calculate_histogram_vert"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stereo_robot.camera_utils.line_follow.line_follow_main.calculate_histogram_vert" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate the image histogram to find peaks in white pixel count, to find starting position for sliding window search</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>warped_frame</strong> (<em>&lt;class 'numpy.ndarray'&gt;</em>) – The thresholded birds-eye-view frame.  [dtype=uint8], [size=(h,w)]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>histogram</strong> – An array where each element the sum of its corresponding column in the warped_frame. Only takes into account the bottom half of the frame. [dtype=uint8], [size=(w)]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>&lt;class ‘numpy.ndarray’&gt;</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<dl>
+<dt>From Addison Sears Collins:</dt><dd><div class="line-block">
+<div class="line">Looking at the warped image, we can see that white pixels represent pieces of the lane lines.</div>
+<div class="line">We start lane line pixel detection by generating a histogram to locate areas of the image that have high concentrations of white pixels.</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="stereo_robot.camera_utils.line_follow.line_follow_main.cam_read">
+<span class="sig-prename descclassname"><span class="pre">stereo_robot.camera_utils.line_follow.line_follow_main.</span></span><span class="sig-name descname"><span class="pre">cam_read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">camera</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/stereo_robot/camera_utils/line_follow/line_follow_main.html#cam_read"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stereo_robot.camera_utils.line_follow.line_follow_main.cam_read" title="Permalink to this definition"></a></dt>
+<dd><p>Camera utility to retrieve and split a stereo pair frame.</p>
+<p class="rubric">Notes</p>
+<p>This function is sprinkled in almost every module to be used in the __name__==”__main__” scrip test. Instances of this utility should be placed in one module.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="stereo_robot.camera_utils.line_follow.line_follow_main.get_endpoints">
+<span class="sig-prename descclassname"><span class="pre">stereo_robot.camera_utils.line_follow.line_follow_main.</span></span><span class="sig-name descname"><span class="pre">get_endpoints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ploty</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fitx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/stereo_robot/camera_utils/line_follow/line_follow_main.html#get_endpoints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stereo_robot.camera_utils.line_follow.line_follow_main.get_endpoints" title="Permalink to this definition"></a></dt>
+<dd><p>Gets top and bottom of fit line as a percentage of the ROI area.</p>
+<p>The top/bottom points are expressed as (y,x), where y is the percentage of the point’s height from the bottom (0-100), and x is the percentage of the point’s distance from the center of the frame (-50 - 50).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>shape</strong> (<em>&lt;class 'numpy.ndarray'&gt;</em>) – empty image of zeros to plot line overlay on. [dtype=uint8], [size=(h,w)]</p></li>
+<li><p><strong>ploty</strong> (<em>&lt;class 'numpy.ndarray'&gt;</em>) – The y indicies of the overlay polygon</p></li>
+<li><p><strong>fitx</strong> (<em>&lt;class 'numpy.ndarray'&gt;</em>) – The x indicies of the overlay polygon</p></li>
+<li><p><strong>h</strong> (<em>int</em>) – the height of the warped frame</p></li>
+<li><p><strong>w</strong> (<em>int</em>) – the width of the warped frame</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>pts</strong> (<em>tuple</em>) – the coordinates of the top and bottom line coord expressed respectively as ((y_bot,x_bot),(y_top,x_top))</p></li>
+<li><p><strong>circle_overlays</strong> (<em>tuple</em>) – data to overlay circles on warped, threshed frame. See usage.</p></li>
+<li><p><strong>text_overlays</strong> (<em>tuple</em>) – data to overlay coordinate text on warped, threshed frame. See usage.</p></li>
+<li><p><em>Usage</em></p></li>
+<li><p><em>—–</em></p></li>
+<li><p><em>&gt;&gt;&gt; pts,circles,putTexts = get_endpoints(ploty,fitx,h,w)</em></p></li>
+<li><p><em>&gt;&gt;&gt; for circle,putText in zip(circle_overlays,text_overlays)</em></p></li>
+<li><p><em>…     cv2.putText(lane_line_markings_col,*putText)          # overlays are designed to easily be passed</em></p></li>
+<li><p><em>…     cv2.circle(lane_line_markings_col, *circle)           # using the astrix notation</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="stereo_robot.camera_utils.line_follow.line_follow_main.get_lane_line_indices_sliding_windows">
+<span class="sig-prename descclassname"><span class="pre">stereo_robot.camera_utils.line_follow.line_follow_main.</span></span><span class="sig-name descname"><span class="pre">get_lane_line_indices_sliding_windows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">warped_frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MINPIX</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MARGIN</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/stereo_robot/camera_utils/line_follow/line_follow_main.html#get_lane_line_indices_sliding_windows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stereo_robot.camera_utils.line_follow.line_follow_main.get_lane_line_indices_sliding_windows" title="Permalink to this definition"></a></dt>
+<dd><p>Get the indices of the lane line pixels using the sliding windows technique.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>warped_frame</strong> (<em>&lt;class 'numpy.ndarray'&gt;</em>) – The thresholded birds-eye-view frame.  [dtype=uint8], [size=(h,w)]</p></li>
+<li><p><strong>MINPIX</strong> (<em>int</em>) – the minimum number of pixels for a sliding window to count as a valid lane index.</p></li>
+<li><p><strong>MARGIN</strong> (<em>int</em>) – The width of each sliding window (times 2)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>fit</strong> (<em>&lt;class np.ndarray&gt;</em>) – the coefficients of the 1st degree polynomial used to fit the line in the form x = fit[0]*y+fit[1].</p></li>
+<li><p><em>confidence</em> – the confidence level of the line.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Starts at the starting index found with <a class="reference internal" href="#stereo_robot.camera_utils.line_follow.line_follow_main.histogram_peak" title="stereo_robot.camera_utils.line_follow.line_follow_main.histogram_peak"><code class="xref py py-meth docutils literal notranslate"><span class="pre">histogram_peak()</span></code></a>.</p>
+<dl class="simple">
+<dt>From Addison Sears-Collins</dt><dd><p>The next step is to use a sliding window technique where we start at the bottom of the image and scan all the way to the top of the image. Each time we search within a sliding window, we add potential lane line pixels to a list. If we have enough lane line pixels in a window, the mean position of these pixels becomes the center of the next sliding window.
+Once we have identified the pixels that correspond to the left and right lane lines, we draw a polynomial best-fit line through the pixels. This line represents our best estimate of the lane lines.</p>
+</dd>
+</dl>
+<p>The confidence level is calculated as follows: for each window i, the confidence Ci is calculated as Ci = num_valid_pixels/MINPIX. The total confidence is the average of all Ci. This is a very basic method which could be thought out better.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="stereo_robot.camera_utils.line_follow.line_follow_main.get_lane_line_previous_window">
+<span class="sig-prename descclassname"><span class="pre">stereo_robot.camera_utils.line_follow.line_follow_main.</span></span><span class="sig-name descname"><span class="pre">get_lane_line_previous_window</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">warped_frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MARGIN</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/stereo_robot/camera_utils/line_follow/line_follow_main.html#get_lane_line_previous_window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stereo_robot.camera_utils.line_follow.line_follow_main.get_lane_line_previous_window" title="Permalink to this definition"></a></dt>
+<dd><p>Gets x and y coordinates of the fit line used to overlay lane line on plot.</p>
+<p>Use the lane line from the previous sliding window to get the parameters
+for the polynomial line for filling in the lane line</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>warped_frame</strong> (<em>&lt;class 'numpy.ndarray'&gt;</em>) – The thresholded birds-eye-view frame.  [dtype=uint8], [size=(h,w)]</p></li>
+<li><p><strong>fit</strong> (<em>&lt;class 'numpy.ndarray'&gt;</em>) – the coefficients of the 1st degree polynomial used to fit the line in the form x = fit[0]*y+fit[1].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>ploty</strong> (<em>&lt;class ‘numpy.ndarray’&gt;</em>) – The y indicies of the overlay polygon</p></li>
+<li><p><strong>fitx</strong> (<em>&lt;class ‘numpy.ndarray’&gt;</em>) – The x indicies of the overlay polygon</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="stereo_robot.camera_utils.line_follow.line_follow_main.get_line_markings">
+<span class="sig-prename descclassname"><span class="pre">stereo_robot.camera_utils.line_follow.line_follow_main.</span></span><span class="sig-name descname"><span class="pre">get_line_markings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">orig_frame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/stereo_robot/camera_utils/line_follow/line_follow_main.html#get_line_markings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stereo_robot.camera_utils.line_follow.line_follow_main.get_line_markings" title="Permalink to this definition"></a></dt>
+<dd><p>Isolates yellow line from surroundings using color thresholding</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>orig_frame</strong> (<em>&lt;class 'numpy.ndarray'&gt;</em>) – The camera frame that contains the lanes we want to detect</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>yellow_mask</strong> – A binary (i.e. black and white) image containing the lane lines.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>&lt;class ‘numpy.ndarray’&gt;</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This process to isolate lane markings is extremely rudimentary. There are much more rigorous approaches such as that used in Addison Sears Collins’ Lane Detection tutorial, however this simple thresholding was sufficient for lane testing.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="stereo_robot.camera_utils.line_follow.line_follow_main.get_perspective_transform_matricies">
+<span class="sig-prename descclassname"><span class="pre">stereo_robot.camera_utils.line_follow.line_follow_main.</span></span><span class="sig-name descname"><span class="pre">get_perspective_transform_matricies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">roi_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">desired_roi_points</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/stereo_robot/camera_utils/line_follow/line_follow_main.html#get_perspective_transform_matricies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stereo_robot.camera_utils.line_follow.line_follow_main.get_perspective_transform_matricies" title="Permalink to this definition"></a></dt>
+<dd><p>Perform the perspective transform.</p>
+<p>Takes the original frame, along with</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>roi_points</strong> (<em>&lt;class 'numpy.ndarray'&gt;</em>) – ROI points selected using ROI_select.py</p></li>
+<li><p><strong>desired_roi_points</strong> (<em>&lt;class 'numpy.ndarray'&gt;</em>) – The shape of the original frame</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>transformation_matrix</strong> (<em>&lt;class ‘numpy.ndarray’&gt;</em>) – the transformation matrix used to convert original frame coords to birds eye view</p></li>
+<li><p><strong>inv_transformation_matrix</strong> (<em>&lt;class ‘numpy.ndarray’&gt;</em>) – the transformation matrix used to convert birds eye view coords to original frame coords</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<dl>
+<dt>From Addison Sears Collins:</dt><dd><div class="line-block">
+<div class="line">“Imagine you’re a bird. You’re flying high above the road lanes below.  From a birds-eye view, the lines on either side of the lane look like they are parallel</div>
+<div class="line">However, from the perspective of the camera mounted on a car below, the lane lines make a trapezoid-like shape. We can’t properly calculate the radius of curvature of the lane because, from the camera’s perspective, the lane width appears to decrease the farther away you get from the car.</div>
+<div class="line">In fact, way out on the horizon, the lane lines appear to converge to a point (known in computer vision jargon as vanishing point).</div>
+</div>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">stereo_robot.camera_utils.line_follow.ROI_select.main</span></code></dt><dd><p>This tool is used to select the roi_points</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="stereo_robot.camera_utils.line_follow.line_follow_main.histogram_peak">
+<span class="sig-prename descclassname"><span class="pre">stereo_robot.camera_utils.line_follow.line_follow_main.</span></span><span class="sig-name descname"><span class="pre">histogram_peak</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">warped_frame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/stereo_robot/camera_utils/line_follow/line_follow_main.html#histogram_peak"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stereo_robot.camera_utils.line_follow.line_follow_main.histogram_peak" title="Permalink to this definition"></a></dt>
+<dd><p>Creates a histogram and determines the index where the maximum histogram value is.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>warped_frame</strong> (<em>&lt;class 'numpy.ndarray'&gt;</em>) – The thresholded birds-eye-view frame.  [dtype=uint8], [size=(h,w)]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x_base</strong> – The index of the maximum histogram value.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="stereo_robot.camera_utils.line_follow.line_follow_main.overlay_lane_lines">
+<span class="sig-prename descclassname"><span class="pre">stereo_robot.camera_utils.line_follow.line_follow_main.</span></span><span class="sig-name descname"><span class="pre">overlay_lane_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fitx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ploty</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/stereo_robot/camera_utils/line_follow/line_follow_main.html#overlay_lane_lines"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stereo_robot.camera_utils.line_follow.line_follow_main.overlay_lane_lines" title="Permalink to this definition"></a></dt>
+<dd><p>Overlay lane lines on an empty image</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>shape</strong> (<em>&lt;class 'numpy.ndarray'&gt;</em>) – empty image of zeros to plot line overlay on. [dtype=uint8], [size=(h,w)]</p></li>
+<li><p><strong>ploty</strong> (<em>&lt;class 'numpy.ndarray'&gt;</em>) – The y indicies of the overlay polygon</p></li>
+<li><p><strong>fitx</strong> (<em>&lt;class 'numpy.ndarray'&gt;</em>) – The x indicies of the overlay polygon</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>shape</strong> – empty image with overlayed fit line overlay on. [dtype=uint8], [size=(h,w)]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>&lt;class ‘numpy.ndarray’&gt;</p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">warp_zero</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">lane_line_markings</span><span class="p">)</span>        <span class="c1"># create an empty image of warped frame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">((</span><span class="n">warp_zero</span><span class="p">,</span> <span class="n">warp_zero</span><span class="p">,</span> <span class="n">warp_zero</span><span class="p">))</span> <span class="c1"># make with 3 columns</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shape</span> <span class="o">=</span> <span class="n">overlay_lane_lines</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span><span class="n">fitx</span><span class="p">,</span><span class="n">ploty</span><span class="p">)</span>         <span class="c1"># overlay lane line to it</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">unwarped</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">warpPerspective</span><span class="p">(</span>                      <span class="c1"># unwarp overlay to original</span>
+<span class="gp">... </span>            <span class="n">shape1</span><span class="p">,</span>                                  <span class="c1">#  frame orientation</span>
+<span class="gp">... </span>            <span class="bp">self</span><span class="o">.</span><span class="n">inv_transformation_matrix</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">addWeighted</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">unwarped</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="c1"># Add unwarped overlay to OG frame</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="stereo_robot.camera_utils.html" class="btn btn-neutral float-left" title="stereo_robot.camera_utils package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="stereo_robot.motor_control.html" class="btn btn-neutral float-right" title="stereo_robot.motor_control package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Nicholas Thorpe.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

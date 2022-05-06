@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>stereo_robot.main &mdash; stereo-robot 0.0.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> stereo-robot
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../source_code.html">Stereo Robot Source Code</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">stereo-robot</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>stereo_robot.main</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for stereo_robot.main</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">main.py</span>
+<span class="sd">=======</span>
+<span class="sd">The core module of my project. Controls a sabertooth dual motor with a sony DS4 remote on a RPi4.</span>
+
+<span class="sd">**Program 1 – Controller Client**</span>
+<span class="sd"> Reads the controller using pyPS4Controller Library.</span>
+<span class="sd"> Changes in left joystick position are written to queue as &#39;vert&#39; and &#39;horz&#39;.</span>
+<span class="sd"> Joystick map is +/-32767.</span>
+<span class="sd"> Be sure to connect DS4 in bluetooth first using RPI&#39;s</span>
+<span class="sd"> </span>
+<span class="sd">**Program 2 – Motor Server**</span>
+<span class="sd"> Reads out of the queue, and sends PWM signals to the two motor driver signals</span>
+<span class="sd"> Currently all pinouts are hardcoded as GPIO 12 and 13. Duty cycle 50%.</span>
+<span class="sd"> The sabertooth switch configuation is in RC mode as follows:</span>
+
+<span class="sd"> | Swtch: 1|2|3|4|5|6</span>
+<span class="sd"> | Postn: D|U|U|U|U|U</span>
+
+
+<span class="sd"> In RC Mode, motor direction is a function of PWM frequency. These may/will change depending on configuration (input voltage, driver, duty cycle, gremlins). The mapping of frequencies to output voltage were collected by hand in SABERTOOTH_VOLTAGE_FREQ_MAP.ipynb, and are fit with a quadratic function.</span>
+
+<span class="sd">Notes</span>
+<span class="sd">-----</span>
+<span class="sd"> Multithreading is used to listen to the controller in a separate process.</span>
+<span class="sd"> A Queue is used to deliver the most recent command as a JSON string.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../stereo_robot.html#stereo_robot.main.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Main program entry.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">queue_camera</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">()</span>
+    <span class="n">queue_controller</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">()</span>
+    <span class="n">cam</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">pi</span> <span class="o">=</span> <span class="n">pigpio</span><span class="o">.</span><span class="n">pi</span><span class="p">()</span>
+    <span class="n">process_a</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">DS4Client</span><span class="p">,</span>
+        <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">queue_controller</span><span class="p">,)</span>
+    <span class="p">)</span>
+    <span class="n">process_b</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">SabertoothServer</span><span class="p">,</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">queue_controller</span><span class="p">,</span><span class="n">queue_camera</span><span class="p">,</span><span class="n">pi</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">process_c</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">CameraClient</span><span class="p">,</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">queue_camera</span><span class="p">,</span><span class="n">cam</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">process_c</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="c1">#cam takes a second to load up</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">process_a</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="n">process_b</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;ctrl+c to exit&#39;</span><span class="p">)</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">process_a</span><span class="o">.</span><span class="n">is_alive</span><span class="p">()</span> <span class="ow">and</span> \
+                    <span class="n">process_b</span><span class="o">.</span><span class="n">is_alive</span><span class="p">()</span> <span class="ow">and</span> \
+                    <span class="n">process_c</span><span class="o">.</span><span class="n">is_alive</span><span class="p">()):</span>
+                <span class="k">raise</span> <span class="ne">KeyboardInterrupt</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Performing Clean Exit&quot;</span><span class="p">)</span>
+        <span class="k">pass</span>
+    
+    <span class="n">process_a</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+    <span class="n">process_b</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+    <span class="n">process_c</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+    
+    <span class="n">process_a</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+    <span class="n">process_b</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+    <span class="n">process_c</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+    <span class="n">pi</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span><span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="kn">from</span> <span class="nn">motor_control</span> <span class="kn">import</span> <span class="n">DS4Client</span><span class="p">,</span> <span class="n">SabertoothServer</span>
+    <span class="kn">from</span> <span class="nn">camera_utils</span> <span class="kn">import</span> <span class="n">CameraClient</span>
+
+    <span class="kn">import</span> <span class="nn">cv2</span><span class="o">,</span> <span class="nn">pigpio</span><span class="o">,</span><span class="nn">os</span><span class="o">,</span><span class="nn">errno</span><span class="o">,</span><span class="nn">json</span><span class="o">,</span><span class="nn">math</span><span class="o">,</span><span class="nn">time</span>
+
+    <span class="kn">from</span> <span class="nn">queue</span> <span class="kn">import</span> <span class="n">Empty</span>
+    <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Queue</span><span class="p">,</span> <span class="n">Process</span>
+    <span class="n">main</span><span class="p">()</span>
+    
+<span class="c1">## The rest of this is old code or docs converted from doxygen</span>
+
+<span class="c1">#&quot;&quot;&quot;! @brief stereo_robot main startup script &quot;&quot;&quot;</span>
+<span class="c1">#</span>
+<span class="c1">###</span>
+<span class="c1">## @file Main Startup Script</span>
+<span class="c1">##</span>
+<span class="c1">## @section description_main Description</span>
+<span class="c1">## Controls a sabertooth dual motor with a sony DS4 remote on a RPi4.</span>
+<span class="c1">##</span>
+<span class="c1">##</span>
+<span class="c1">## @section notes_main Notes</span>
+<span class="c1">##    Multithreading is used to listen to the controller in a separate process.</span>
+<span class="c1">##    A Queue is used to deliver the most recent command as a JSON string.</span>
+<span class="c1">##    PROGRAM 1: Controller Client</span>
+<span class="c1">##        Reads the controller using pyPS4Controller Library.</span>
+<span class="c1">##        Changes in left joystick position are written to queue as &#39;vert&#39; and &#39;horz&#39;.</span>
+<span class="c1">##        Joystick map is +/-32767</span>
+<span class="c1">##        Be sure to connect DS4 in bluetooth first using RPI&#39;s</span>
+<span class="c1">##</span>
+<span class="c1">##    PROGRAM 2: Motor Server</span>
+<span class="c1">##        Reads out of the queue, and sends PWM signals to the two motor driver signals</span>
+<span class="c1">##        Currently all pinouts are hardcoded as GPIO 12 and 13. Duty cycle 50%.</span>
+<span class="c1">##        The sabertooth switch configuation is in RC mode as follows:</span>
+<span class="c1">##        | 1 | 2 | 3 | 4 | 5 | 6 |</span>
+<span class="c1">##        |DWN| UP| UP| UP| UP|DWN|</span>
+<span class="c1">##        In RC Mode, motor direction is a function of PWM frequency. These may/will</span>
+<span class="c1">##        change depending on configuration (input voltage, driver, duty cycle, gremlins).</span>
+<span class="c1">##        The mapping of frequencies to output voltage were collected by hand in</span>
+<span class="c1">##        SABERTOOTH_VOLTAGE_FREQ_MAP.ipynb, and are fit with a quadratic function.</span>
+
+
+
+
+
+<span class="c1"># FIFO = &#39;mypipe&#39;</span>
+<span class="c1"># </span>
+<span class="c1"># try:</span>
+<span class="c1">#     os.mkfifo(FIFO)</span>
+<span class="c1"># except OSError as oe: </span>
+<span class="c1">#     if oe.errno != errno.EEXIST:</span>
+<span class="c1">#         raise</span>
+
+
+
+
+<span class="c1"># PROGRAM 1: Controller client</span>
+<span class="c1"># from pyPS4Controller.controller import Controller</span>
+<span class="c1"># </span>
+<span class="c1"># class MyController(Controller):</span>
+<span class="c1">#     def __init__(self,pipe, **kwargs):</span>
+<span class="c1">#         Controller.__init__(self, **kwargs)</span>
+<span class="c1">#         self.control = {&#39;vert&#39;:0,&#39;horz&#39;:0}</span>
+<span class="c1">#         self.pipe = pipe</span>
+<span class="c1">#         self.write_controller()</span>
+<span class="c1">#         </span>
+<span class="c1">#     def write_controller(self):</span>
+<span class="c1">#         self.pipe.put(self.control)</span>
+<span class="c1">#         </span>
+<span class="c1">#         </span>
+<span class="c1">#     def on_x_press(self):</span>
+<span class="c1">#        print(&quot;Hello world&quot;)</span>
+<span class="c1"># </span>
+<span class="c1">#     def on_x_release(self):</span>
+<span class="c1">#        print(&quot;Goodbye world&quot;)</span>
+<span class="c1">#     </span>
+<span class="c1">#     def on_L3_left(self,value):</span>
+<span class="c1">#         self.control[&#39;horz&#39;] = value</span>
+<span class="c1">#         self.write_controller()</span>
+<span class="c1">#         </span>
+<span class="c1">#     def on_L3_right(self,value):</span>
+<span class="c1">#         self.control[&#39;horz&#39;] = value</span>
+<span class="c1">#         self.write_controller()</span>
+<span class="c1">#         </span>
+<span class="c1">#     def on_L3_up(self,value):</span>
+<span class="c1">#         self.control[&#39;vert&#39;] = value</span>
+<span class="c1">#         self.write_controller()</span>
+<span class="c1"># </span>
+<span class="c1">#     def on_L3_down(self,value):</span>
+<span class="c1">#         self.control[&#39;vert&#39;] = value</span>
+<span class="c1">#         self.write_controller()</span>
+<span class="c1">#         </span>
+<span class="c1">#     def on_L3_x_at_rest(self):</span>
+<span class="c1">#         self.control[&#39;horz&#39;] = 0</span>
+<span class="c1">#         self.write_controller()</span>
+<span class="c1">#     </span>
+<span class="c1">#     def on_L3_y_at_rest(self):</span>
+<span class="c1">#         self.control[&#39;vert&#39;] = 0</span>
+<span class="c1">#         self.write_controller()</span>
+<span class="c1"># </span>
+<span class="c1"># def client(q):</span>
+<span class="c1">#     controller = MyController(q,interface=&quot;/dev/input/js0&quot;, connecting_using_ds4drv=False)</span>
+<span class="c1">#     controller.listen(timeout=60)</span>
+
+
+<span class="c1">## PROGRAM 2: Motor Control</span>
+
+
+
+<span class="c1">#def accelMotor(current,target,step):</span>
+<span class="c1">#    if current==target:</span>
+<span class="c1">#        return int(target)</span>
+<span class="c1">#    direction = math.copysign(1,target-current)</span>
+<span class="c1">#    next_ = step*direction + current</span>
+<span class="c1">#    if direction &gt; 0:</span>
+<span class="c1">#        if target-next_&lt;0:     #if we overshot:</span>
+<span class="c1">#            return int(target)</span>
+<span class="c1">#        else:</span>
+<span class="c1">#            return int(next_)</span>
+<span class="c1">#    else:</span>
+<span class="c1">#        if target-next_&gt;0:</span>
+<span class="c1">#            return int(target)</span>
+<span class="c1">#        else:</span>
+<span class="c1">#            return int(next_)</span>
+<span class="c1">#</span>
+<span class="c1">## collected data to map frequencies to motor voltages. Tested on Kastar 12v</span>
+<span class="c1">#FREQS = np.array([250,  300, 350, 400, 450, 500,  550])</span>
+<span class="c1">#VOLTS = np.array([    -12.13, -2.6, 0.0,   3, 6.8, 10.9, 11.8])</span>
+<span class="c1">#</span>
+<span class="c1">#COEF = np.polyfit(VOLTS,FREQS,2)</span>
+<span class="c1">#freqFun = lambda x: sum(COEF*[x**2,x,1])</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1">#PIN_MTR_L = 13</span>
+<span class="c1">#PIN_MTR_R = 12</span>
+<span class="c1">#</span>
+<span class="c1">#MTR_PWMduty = int(0.5e6)      # Motor duty cycle range from 0 to 1e6</span>
+<span class="c1">#MTR_ACCEL = 1</span>
+<span class="c1">#</span>
+<span class="c1">#JOYSTICK_MAX = 32767  # These are used to map the position of DS4 to a motor voltage</span>
+<span class="c1">#MTR_VOLT_MAX = 10     # V</span>
+<span class="c1">#</span>
+<span class="c1">#TURN_TIME_90 = 10</span>
+<span class="c1">#</span>
+<span class="c1">#def motor_differential(vert,horz):</span>
+<span class="c1">#    &quot;&quot;&quot;</span>
+<span class="c1">#    Takes a vert and horz signal (both from [-1,1]) and splits it up into a left and right</span>
+<span class="c1">#    wheel command. I.e. vert = 1, horz = 0 --&gt; left = 1, right = 1</span>
+<span class="c1">#                        vert = 1, horz = 1 --&gt; left = 0.75, right = 0.25</span>
+<span class="c1">#    &quot;&quot;&quot;</span>
+<span class="c1">#    L = -(vert -0.5*horz)</span>
+<span class="c1">#    R = -(vert +0.5*horz)</span>
+<span class="c1">#    L = min(max(L,-1),1)</span>
+<span class="c1">#    R = min(max(R,-1),1)</span>
+<span class="c1">#    return L,R</span>
+
+    
+<span class="c1"># def server(q):</span>
+<span class="c1">#     # Setup PIGPIO</span>
+<span class="c1">#     pi = pigpio.pi()</span>
+<span class="c1">#     pi.set_mode(PIN_MTR_L,pigpio.OUTPUT)</span>
+<span class="c1">#     pi.set_mode(PIN_MTR_R,pigpio.OUTPUT)</span>
+<span class="c1">#     </span>
+<span class="c1">#     L_freq,L_freq_target = 0,0</span>
+<span class="c1">#     R_freq,R_freq_target = 0,0</span>
+<span class="c1">#     </span>
+<span class="c1">#     while True:</span>
+<span class="c1">#         # read the controller</span>
+<span class="c1">#         try:</span>
+<span class="c1">#             message = q.get_nowait()</span>
+<span class="c1"># #             print(&#39;recieved: &#39;, message)</span>
+<span class="c1">#             controller_state = message</span>
+<span class="c1">#             </span>
+<span class="c1">#             DS4_vert = controller_state[&#39;vert&#39;]/JOYSTICK_MAX</span>
+<span class="c1">#             DS4_horz = controller_state[&#39;horz&#39;]/JOYSTICK_MAX</span>
+<span class="c1">#             </span>
+<span class="c1">#             L,R = motor_differential(DS4_vert,DS4_horz)</span>
+<span class="c1">#             </span>
+<span class="c1">#             L_freq_target = freqFun(L*MTR_VOLT_MAX)</span>
+<span class="c1">#             R_freq_target = freqFun(R*MTR_VOLT_MAX)</span>
+<span class="c1">#             </span>
+<span class="c1">#             </span>
+<span class="c1">#             </span>
+<span class="c1">#         except Empty:</span>
+<span class="c1">#             pass</span>
+<span class="c1">#         </span>
+<span class="c1">#         L_freq = accelMotor(L_freq,L_freq_target,MTR_ACCEL)</span>
+<span class="c1">#         R_freq = accelMotor(R_freq,R_freq_target,MTR_ACCEL)</span>
+<span class="c1"># #         print(f&#39;left:  L: {L*MTR_VOLT_MAX}  freq:{L_freq}&#39;)</span>
+<span class="c1"># #         print(f&#39;right: R: {R*MTR_VOLT_MAX}  freq:{R_freq}&#39;)</span>
+<span class="c1">#         </span>
+<span class="c1">#         pi.hardware_PWM(PIN_MTR_L,L_freq,MTR_PWMduty)</span>
+<span class="c1">#         pi.hardware_PWM(PIN_MTR_R,R_freq,MTR_PWMduty)</span>
+
+<span class="c1"># process.start()</span>
+<span class="c1"># process.join()</span>
+<span class="c1"># server(queue)</span>
+<span class="c1"># you can start listening before controller is paired, as long as you pair it within the timeout window</span>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Nicholas Thorpe.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

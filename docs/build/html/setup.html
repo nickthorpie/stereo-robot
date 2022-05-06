@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Getting Started &mdash; stereo-robot 0.0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Stereo Robot Source Code" href="source_code.html" />
+    <link rel="prev" title="Welcome to stereo-robot’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> stereo-robot
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#os-installation">OS Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#install-os">Install OS</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#os-setup">OS Setup</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#remote-desktop">Remote Desktop</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="source_code.html">Stereo Robot Source Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_sabertooth.html">Sabretooth Setup and Calibration</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">stereo-robot</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Getting Started</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/setup.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline"></a></h1>
+<section id="os-installation">
+<h2>OS Installation<a class="headerlink" href="#os-installation" title="Permalink to this headline"></a></h2>
+<section id="introduction">
+<h3>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline"></a></h3>
+<p>StereoRobot was developed on Raspbian Bullseye. The new 64 bit architecture brings support for easier installation of system libraries like OpenCV, however camera support has changed in an unexpected way. There are also some setup steps to enable interacting with the raspberry Pi Remotely.</p>
+</section>
+<section id="prerequisites">
+<h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline"></a></h3>
+<p>To install and sett up the Raspberry Pi environment, you will need:
+-       A computer
+-       An Internet Connection to download the correct OS version
+-       A 32 GB (minimum) MicroSD card
+-       A MicroSD card reader to read/write your MicroSD card on your computer
+-       A Raspberry Pi 4
+-       (recommended)* connected to a Monitor, keyboard, and mouse.
+-       A secure wifi router that you can access administrator options on.</p>
+<ul class="simple">
+<li><p>Having a monitor, keyboard and mouse can save a lot of troubleshooting headaches while setting up remote connectivity. You may proceed without these however if you run in to trouble, a monitor is a good first step.</p></li>
+</ul>
+</section>
+<section id="install-os">
+<h3>Install OS<a class="headerlink" href="#install-os" title="Permalink to this headline"></a></h3>
+<ol class="arabic simple">
+<li><p>Connect a micro SD card reader to the laptop</p></li>
+<li><p>On a computer, [download](<a class="reference external" href="https://www.raspberrypi.com/software/">https://www.raspberrypi.com/software/</a>) and launch the Raspberry Pi Imager</p></li>
+<li><p>Under Operating System, select Raspberry Pi OS (other) &gt; Raspberry Pi OS (64 bit). Ensure that the description indicates that the OS code name is Bullseye</p></li>
+</ol>
+<a class="reference internal image-reference" href="_images/RPi_imager_select_OS.png"><img alt="make sure you select the bullseye release if available." src="_images/RPi_imager_select_OS.png" style="width: 400px;" /></a>
+<p>4.      Under the advanced options menu,
+• Select Set <strong>hostname</strong> as stereorobot
+• Select <strong>Enable SSH</strong> using password authentication
+• Select <strong>Set username and password</strong> using <strong>Username: Pi</strong> and create a secure password.
+• (recommended) Select <strong>Configure wifi</strong> network, use SSID and Password of a wifi network that is connected to the internet.</p>
+<a class="reference internal image-reference" href="_images/RPi_imager_select_advanced_options.png"><img alt="make sure you select the bullseye release if available." src="_images/RPi_imager_select_advanced_options.png" style="width: 400px;" /></a>
+<ol class="arabic simple" start="5">
+<li><p>Under Choose Storage, navigate to and select the micro SD card</p></li>
+</ol>
+<p>6. Finally, click Write. This should takes 5-10 minutes depending on internet speeds
+[DEVELOPPER NOTE]: In the future, the default Raspberry Pi OS may not be Bullseye. The guide will need to be updated to show the user where to locate and install older images.</p>
+<p>You can now eject the MicroSD card and insert it into your Raspberry Pi</p>
+<a class="reference internal image-reference" href="_images/insert_SD.png"><img alt="make sure you select the bullseye release if available." src="_images/insert_SD.png" style="width: 400px;" /></a>
+<p>With the Keyboard, Mouse and Monitor plugged in, insert the power cord into the Raspberry Pi and let it boot up. If all goes well, the Raspberry Pi should load to the desktop.</p>
+</section>
+</section>
+<section id="os-setup">
+<h2>OS Setup<a class="headerlink" href="#os-setup" title="Permalink to this headline"></a></h2>
+<section id="remote-desktop">
+<h3>Remote Desktop<a class="headerlink" href="#remote-desktop" title="Permalink to this headline"></a></h3>
+<p>Working on the Raspberry Pi with a monitor setup can be clunky, especially when working through with mobile robotics. This project suggests using a VNC remote desktop connection to work on your Raspberry pi from your personal computer. There are many potential pitfalls when setting up a VNC, however this guide aims to sidestep as many as possible.</p>
+<p>There are many ways to connect to your Raspberry Pi from your computer through a local network. This guide will cover using a common WIFI router, however some troubleshooting options are discussed at the end.</p>
+<p><strong>SSH Login</strong>
+The first step is to attempt to SSH into your Raspberry Pi.</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Ensure your Raspberry Pi and Personal Computer are connected to the same network.</p></li>
+<li><p>On your Personal Computer, open a terminal window</p></li>
+</ol>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>Enter the command <cite>ssh pi&#64;stereorobot.local</cite></p></li>
+<li><p>Enter your secure password</p></li>
+</ol>
+</div></blockquote>
+</div></blockquote>
+<p>Your terminal should now indicate you are working on your Raspberry Pi since each line should start with <a href="#id3"><span class="problematic" id="id4">`pi&#64;stereorobot:~ $ `.  A more thorough guide is available `here`_</span></a>.</p>
+<p><strong>SSH Troubleshooting</strong>
+Hopefully your Raspberry Pi is already connected to your wifi network from when you installed the disk image. To test this, try to enter the following command on your PC: <cite>ssh pi&#64;stereorobot.local</cite>. If this works, continue to the next section. If not, try the following troubleshooting ideas.
+Connection:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a href="#id1"><span class="problematic" id="id2">*</span></a>(recommended) Use a cheap router specifically for connecting to the robot.</p></li>
+<li><p>Connect the RPi directly to the router through ethernet</p></li>
+<li><p>Connect your PC directly to the router through ethernet</p></li>
+<li><p>Disable firewall settings on your router</p></li>
+<li><p>Connect to your Raspberry Pi directly through your PC’s ethernet. You will need to enable internet sharing on your device.</p></li>
+</ul>
+</div></blockquote>
+<dl class="simple">
+<dt>Settings:</dt><dd><ul class="simple">
+<li><p>Ensure SSH is enabled by clicking Main Menu (top left of screen) &gt; Preferences &gt; Configuration &gt; Raspberry Pi Configuration</p></li>
+</ul>
+</dd>
+</dl>
+<ul class="simple">
+<li><p>The router does not require internet when operating the robot, but the RPi will need an internet connection for setup. In this case, you may need to set up the RPi as a desktop setup before connecting to the internet-less Wifi router.</p></li>
+</ul>
+<p><strong>VNC Login</strong>
+Once you have successfully SSH’d into your RPi, you can now change some system settings.</p>
+<blockquote>
+<div><p>1. In your SSH Terminal, type:
+<cite>sudo raspi-config</cite>
+You can navigate this menu using directional arrows. [Up/Down] scrolls through the menu, [Left/Right] lets you highlight the &lt;Select&gt; and &lt;Back&gt; buttons. [Enter] allows you to enter.
+2. Navigate to System Options &gt; Boot / Auto Login &gt; Desktop Autologin
+3. Navigate to Interface Options &gt; VNC &gt; Yes
+4. Navigate to Interface Options &gt; Legacy Camera &gt; Yes</p>
+</div></blockquote>
+<dl>
+<dt>When the RPi is booted without a monitor, it defaults to headless mode. This means that the VNC will connect, but there will be no desktop to display. We can force the desktop to boot to desktop with the following steps:</dt><dd><ol class="arabic simple">
+<li><p>In SSH terminal, type</p></li>
+</ol>
+</dd>
+<dt><cite>sudo nano /boot/config.txt</cite></dt><dd><ol class="arabic simple" start="2">
+<li><p>The nano text editor will appear. Scroll to the bottom of the file and paste the following text:</p></li>
+</ol>
+<blockquote>
+<div><p>hdmi_force_hotplug=1
+hdmi_group=1
+hdmi_mode=16 # (or any other pi resolution you want, 16 is for 1080p)</p>
+</div></blockquote>
+<ol class="arabic simple" start="3">
+<li><p>To save and exit, type <cite>[ctrl+x]</cite>, <cite>[y]</cite>, <cite>[enter]</cite></p></li>
+</ol>
+</dd>
+<dt>Now, VNC should be ready on the raspberry pi. To set up on your computer, follow the following steps:</dt><dd><ol class="arabic simple">
+<li><p>[Download RealVNC Viewer](<a class="reference external" href="https://www.realvnc.com/en/connect/download/viewer/">https://www.realvnc.com/en/connect/download/viewer/</a>) and follow the installation process.</p></li>
+<li><p>Open RealVNC Viewer. In the search bar, enter stereorobot.local</p></li>
+</ol>
+</dd>
+</dl>
+<img alt="images/VNC_SETUP1.png:width:400:alt:makesureyouselectthebullseyereleaseifavailable.3.IntheAuthenticationprompt,useUsername:pi,andyoursecurepassword.Click“OK”." src="images/VNC_SETUP1.png:width:400:alt:makesureyouselectthebullseyereleaseifavailable.3.IntheAuthenticationprompt,useUsername:pi,andyoursecurepassword.Click“OK”." />
+<a class="reference internal image-reference" href="_images/VNC_SETUP2.png"><img alt="make sure you select the bullseye release if available." src="_images/VNC_SETUP2.png" style="width: 400px;" /></a>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to stereo-robot’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="source_code.html" class="btn btn-neutral float-right" title="Stereo Robot Source Code" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Nicholas Thorpe.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

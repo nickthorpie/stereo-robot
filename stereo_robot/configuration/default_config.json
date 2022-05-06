@@ -1,0 +1,30 @@
+{
+    "ROI": [[3, 477], [209, 310], [458, 311], [636, 474]],
+    "THRESH":{
+        "HI": [48, 193, 218], 
+        "LO": [18, 86, 158]
+    },
+    "MOTOR":{
+        "FREQS":[   250,  300, 350, 400, 450,  500,  550],
+        "VOLTS":[-12.13, -2.6, 0.0,   3, 6.8, 10.9, 11.8],
+        "PIN_MTR_L" : 13,
+        "PIN_MTR_R" : 12,
+        "MTR_VOLT_MAX" : 5,
+        "HORZ_FORCE_CONST":0.5,
+        "VERT_FORCE_CONST":0.5,
+        "MTR_PWMduty" : 500000,
+        "COEF":[3.33784780e-01, 1.22781432e+01, 3.46553931e+02]
+    },
+    "JOYSTICK_MAX" : 32767,
+    "DMU":{
+        "TIME_CONFIDENCE_CONST":0.25,
+        "HORZ_FORCE_CONST" : 2,
+        "VERT_FORCE_CONST" : 3,
+        "MIN_TURN_PWR" : 20,
+        "MIN_FWD_PWR" : 30,
+        "DEAD_RECKON_STRAIGHT_1M": 10,
+        "DEAD_RECKON_TURN_360D": 12,
+        "DEAD_RECKON_STRAIGHT_SPEED":50,
+        "DEAD_RECKON_TURN_SPEED":100
+    }
+}

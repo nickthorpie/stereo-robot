@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>stereo_robot.camera_utils.line_follow.line_follow_main &mdash; stereo-robot 0.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> stereo-robot
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../setup.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source_code.html">Stereo Robot Source Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../setup_sabertooth.html">Sabretooth Setup and Calibration</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">stereo-robot</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>stereo_robot.camera_utils.line_follow.line_follow_main</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for stereo_robot.camera_utils.line_follow.line_follow_main</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A collection of functions that are inspired/borrowed from AutomaticAddison&#39;s `tutorial`_ using the Sliding Window Technique.</span>
+
+<span class="sd">.. _tutorial: https://automaticaddison.com/the-ultimate-guide-to-real-time-lane-detection-using-opencv/&gt;</span>
+
+<span class="sd">This</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">cv2</span><span class="o">,</span> <span class="nn">json</span><span class="o">,</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span> <span class="c1"># Import the NumPy scientific computing library</span>
+<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)))</span>
+<span class="kn">from</span> <span class="nn">pyzbar</span> <span class="kn">import</span> <span class="n">pyzbar</span>
+<span class="c1"># Author: Addison Sears-Collins</span>
+<span class="c1"># https://automaticaddison.com</span>
+<span class="c1"># Description: A collection of methods to detect help with edge detection</span>
+
+<span class="c1"># Read threshhold data This should will be taken out and substituted with the new config module</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;./thresh_data.json&quot;</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">thresh_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">thresh_HI</span> <span class="o">=</span> <span class="n">thresh_data</span><span class="p">[</span><span class="s1">&#39;bounds_HI&#39;</span><span class="p">]</span>
+    <span class="n">thresh_LO</span> <span class="o">=</span> <span class="n">thresh_data</span><span class="p">[</span><span class="s1">&#39;bounds_LO&#39;</span><span class="p">]</span>
+
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;./ROI_JSON.json&quot;</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">ROI_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">BL</span><span class="p">,</span><span class="n">TL</span><span class="p">,</span><span class="n">TR</span><span class="p">,</span><span class="n">BR</span> <span class="o">=</span> <span class="n">ROI_data</span><span class="p">[</span><span class="s1">&#39;ROI_POINTS&#39;</span><span class="p">]</span>
+    <span class="n">ROI_POINTS</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">([</span><span class="n">TL</span><span class="p">,</span><span class="n">BL</span><span class="p">,</span><span class="n">BR</span><span class="p">,</span><span class="n">TR</span><span class="p">,])</span>
+    
+
+<div class="viewcode-block" id="get_perspective_transform_matricies"><a class="viewcode-back" href="../../../../stereo_robot.camera_utils.line_follow.html#stereo_robot.camera_utils.line_follow.line_follow_main.get_perspective_transform_matricies">[docs]</a><span class="k">def</span> <span class="nf">get_perspective_transform_matricies</span><span class="p">(</span><span class="n">roi_points</span><span class="p">,</span><span class="n">desired_roi_points</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Perform the perspective transform.</span>
+<span class="sd">    </span>
+<span class="sd">    Extended Summary</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    Takes the original frame, along with</span>
+<span class="sd">     </span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">        roi_points : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">            ROI points selected using ROI_select.py</span>
+<span class="sd">        </span>
+<span class="sd">        desired_roi_points : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">            The shape of the original frame</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">        transformation_matrix : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">            the transformation matrix used to convert original frame coords to birds eye view</span>
+<span class="sd">        </span>
+<span class="sd">        inv_transformation_matrix : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">            the transformation matrix used to convert birds eye view coords to original frame coords</span>
+<span class="sd">            </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    From Addison Sears Collins:</span>
+<span class="sd">     | &quot;Imagine you’re a bird. You’re flying high above the road lanes below.  From a birds-eye view, the lines on either side of the lane look like they are parallel</span>
+<span class="sd">     | However, from the perspective of the camera mounted on a car below, the lane lines make a trapezoid-like shape. We can’t properly calculate the radius of curvature of the lane because, from the camera’s perspective, the lane width appears to decrease the farther away you get from the car.</span>
+<span class="sd">     | In fact, way out on the horizon, the lane lines appear to converge to a point (known in computer vision jargon as vanishing point).</span>
+<span class="sd">     </span>
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    stereo_robot.camera_utils.line_follow.ROI_select.main</span>
+<span class="sd">        This tool is used to select the roi_points</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Calculate the transformation matrix</span>
+    <span class="n">transformation_matrix</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">getPerspectiveTransform</span><span class="p">(</span>
+      <span class="n">roi_points</span><span class="p">,</span> <span class="n">desired_roi_points</span><span class="p">)</span>
+
+    <span class="c1"># Calculate the inverse transformation matrix</span>
+    <span class="n">inv_transformation_matrix</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">getPerspectiveTransform</span><span class="p">(</span>
+      <span class="n">desired_roi_points</span><span class="p">,</span> <span class="n">roi_points</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">transformation_matrix</span><span class="p">,</span> <span class="n">inv_transformation_matrix</span></div>
+
+<span class="c1">#def perspective_transform(frame,transformation_matrix):</span>
+<span class="c1">#    &quot;&quot;&quot;Perform the perspective transform.</span>
+<span class="c1">#</span>
+<span class="c1">#    Extended Summary</span>
+<span class="c1">#    ----------------</span>
+<span class="c1">#    Takes the original frame, along with</span>
+<span class="c1">#</span>
+<span class="c1">#    Notes</span>
+<span class="c1">#    -----</span>
+<span class="c1">#    From Addison Sears Collins:</span>
+<span class="c1">#</span>
+<span class="c1">#     | &quot;Imagine you’re a bird. You’re flying high above the road lanes below.  From a birds-eye view, the lines on either side of the lane look like they are parallel</span>
+<span class="c1">#     | However, from the perspective of the camera mounted on a car below, the lane lines make a trapezoid-like shape. We can’t properly calculate the radius of curvature of the lane because, from the camera’s perspective, the lane width appears to decrease the farther away you get from the car.</span>
+<span class="c1">#     | In fact, way out on the horizon, the lane lines appear to converge to a point (known in computer vision jargon as vanishing point).</span>
+<span class="c1">#</span>
+<span class="c1">#     This was pieced together rather quickly, so the</span>
+<span class="c1">#</span>
+<span class="c1">#    Parameters</span>
+<span class="c1">#    ----------</span>
+<span class="c1">#        frame : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="c1">#            Current frame</span>
+<span class="c1">#</span>
+<span class="c1">#        orig_frame_shape : tuple</span>
+<span class="c1">#            The shape of the original frame</span>
+<span class="c1">#</span>
+<span class="c1">#    Notes</span>
+<span class="c1">#    -----</span>
+<span class="c1">#    THIS IS DEPRECATED, ALL FUNCTIONALITY HAS BEEN PULLED OUT OF IT, SHOULD JUST USE cv2.warpPerspective</span>
+<span class="c1">#    &quot;&quot;&quot;</span>
+<span class="c1">#</span>
+<span class="c1">#    # Perform the transform using the transformation matrix</span>
+<span class="c1">#    warped_frame = cv2.warpPerspective(</span>
+<span class="c1">#      frame, transformation_matrix, frame.shape[::-1][1:],</span>
+<span class="c1">#      flags=(cv2.INTER_LINEAR)</span>
+<span class="c1">#      )</span>
+<span class="c1">#</span>
+<span class="c1">##     (thresh, binary_warped) = cv2.threshold(</span>
+<span class="c1">##       warped_frame, 127, 255, cv2.THRESH_BINARY)</span>
+<span class="c1">##     warped_frame = binary_warped</span>
+<span class="c1">#</span>
+<span class="c1">#    return warped_frame</span>
+
+<div class="viewcode-block" id="get_line_markings"><a class="viewcode-back" href="../../../../stereo_robot.camera_utils.line_follow.html#stereo_robot.camera_utils.line_follow.line_follow_main.get_line_markings">[docs]</a><span class="k">def</span> <span class="nf">get_line_markings</span><span class="p">(</span><span class="n">orig_frame</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Isolates yellow line from surroundings using color thresholding</span>
+<span class="sd">   </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    orig_frame : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">        The camera frame that contains the lanes we want to detect</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">        yellow_mask : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">            A binary (i.e. black and white) image containing the lane lines.</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This process to isolate lane markings is extremely rudimentary. There are much more rigorous approaches such as that used in Addison Sears Collins&#39; Lane Detection tutorial, however this simple thresholding was sufficient for lane testing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">hsv</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">orig_frame</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2HSV</span><span class="p">)</span>
+    <span class="n">lower_yellow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">thresh_LO</span><span class="p">)</span>
+    <span class="n">upper_yellow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">thresh_HI</span><span class="p">)</span>
+    <span class="n">yellow_mask</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">inRange</span><span class="p">(</span><span class="n">hsv</span><span class="p">,</span> <span class="n">lower_yellow</span><span class="p">,</span> <span class="n">upper_yellow</span><span class="p">)</span>
+<span class="c1">#     yellow_image = cv2.bitwise_and(image, image, mask=yellow_mask)</span>
+    
+    <span class="c1"># Combine the two above images</span>
+    
+    <span class="k">return</span> <span class="n">yellow_mask</span></div>
+
+<div class="viewcode-block" id="calculate_histogram_vert"><a class="viewcode-back" href="../../../../stereo_robot.camera_utils.line_follow.html#stereo_robot.camera_utils.line_follow.line_follow_main.calculate_histogram_vert">[docs]</a><span class="k">def</span> <span class="nf">calculate_histogram_vert</span><span class="p">(</span><span class="n">warped_frame</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate the image histogram to find peaks in white pixel count, to find starting position for sliding window search</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    </span>
+<span class="sd">    warped_frame : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">        The thresholded birds-eye-view frame.  [dtype=uint8], [size=(h,w)]</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    histogram : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">        An array where each element the sum of its corresponding column in the warped_frame. Only takes into account the bottom half of the frame. [dtype=uint8], [size=(w)]</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    From Addison Sears Collins:</span>
+<span class="sd">     | Looking at the warped image, we can see that white pixels represent pieces of the lane lines.</span>
+<span class="sd">     | We start lane line pixel detection by generating a histogram to locate areas of the image that have high concentrations of white pixels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">warped_frame</span>
+             
+    <span class="c1"># Generate the histogram</span>
+    <span class="n">histogram</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">frame</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span>
+              <span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">):,:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">histogram</span></div>
+
+<div class="viewcode-block" id="histogram_peak"><a class="viewcode-back" href="../../../../stereo_robot.camera_utils.line_follow.html#stereo_robot.camera_utils.line_follow.line_follow_main.histogram_peak">[docs]</a><span class="k">def</span> <span class="nf">histogram_peak</span><span class="p">(</span><span class="n">warped_frame</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a histogram and determines the index where the maximum histogram value is.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">        warped_frame : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">            The thresholded birds-eye-view frame.  [dtype=uint8], [size=(h,w)]</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">        x_base : int</span>
+<span class="sd">            The index of the maximum histogram value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">histogram</span> <span class="o">=</span> <span class="n">calculate_histogram_vert</span><span class="p">(</span><span class="n">warped_frame</span><span class="p">)</span>
+    <span class="n">x_base</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">histogram</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x_base</span></div>
+
+<div class="viewcode-block" id="get_lane_line_indices_sliding_windows"><a class="viewcode-back" href="../../../../stereo_robot.camera_utils.line_follow.html#stereo_robot.camera_utils.line_follow.line_follow_main.get_lane_line_indices_sliding_windows">[docs]</a><span class="k">def</span> <span class="nf">get_lane_line_indices_sliding_windows</span><span class="p">(</span><span class="n">warped_frame</span><span class="p">,</span><span class="n">MINPIX</span><span class="p">,</span><span class="n">MARGIN</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get the indices of the lane line pixels using the sliding windows technique.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    warped_frame : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">        The thresholded birds-eye-view frame.  [dtype=uint8], [size=(h,w)]</span>
+<span class="sd">        </span>
+<span class="sd">    MINPIX : int</span>
+<span class="sd">        the minimum number of pixels for a sliding window to count as a valid lane index.</span>
+<span class="sd">    </span>
+<span class="sd">    MARGIN : int</span>
+<span class="sd">        The width of each sliding window (times 2)</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fit : &lt;class np.ndarray&gt;</span>
+<span class="sd">        the coefficients of the 1st degree polynomial used to fit the line in the form x = fit[0]*y+fit[1].</span>
+<span class="sd">    confidence:</span>
+<span class="sd">        the confidence level of the line.</span>
+<span class="sd">        </span>
+<span class="sd">    </span>
+<span class="sd">        </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Starts at the starting index found with :py:meth:`histogram_peak`.</span>
+<span class="sd">     </span>
+<span class="sd">    From Addison Sears-Collins</span>
+<span class="sd">     The next step is to use a sliding window technique where we start at the bottom of the image and scan all the way to the top of the image. Each time we search within a sliding window, we add potential lane line pixels to a list. If we have enough lane line pixels in a window, the mean position of these pixels becomes the center of the next sliding window.</span>
+<span class="sd">     Once we have identified the pixels that correspond to the left and right lane lines, we draw a polynomial best-fit line through the pixels. This line represents our best estimate of the lane lines.</span>
+<span class="sd">    </span>
+<span class="sd">    The confidence level is calculated as follows: for each window i, the confidence Ci is calculated as Ci = num_valid_pixels/MINPIX. The total confidence is the average of all Ci. This is a very basic method which could be thought out better.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#TODO: move no_of_windows, MINPIX, MARGIN to Config Module</span>
+    
+    <span class="n">no_of_windows</span> <span class="o">=</span> <span class="mi">20</span>
+    
+    
+    <span class="n">minpix</span> <span class="o">=</span> <span class="n">MINPIX</span> <span class="c1">#????</span>
+    <span class="c1"># Sliding window width is +/- margin</span>
+    <span class="n">margin</span> <span class="o">=</span> <span class="n">MARGIN</span> <span class="c1">#???</span>
+ 
+    <span class="n">frame_sliding_window</span> <span class="o">=</span> <span class="n">warped_frame</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+ 
+    <span class="c1"># Set the height of the sliding windows</span>
+    <span class="n">window_height</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="n">warped_frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">no_of_windows</span><span class="p">)</span>       
+ 
+    <span class="c1"># Find the x and y coordinates of all the nonzero </span>
+    <span class="c1"># (i.e. white) pixels in the frame. </span>
+    <span class="n">nonzero</span> <span class="o">=</span> <span class="n">warped_frame</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()</span>
+    <span class="n">nonzeroy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">nonzero</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">nonzerox</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">nonzero</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> 
+         
+    <span class="c1"># Store the pixel indices for the left and right lane lines</span>
+    <span class="n">lane_inds</span> <span class="o">=</span> <span class="p">[]</span>
+         
+    <span class="c1"># Current positions for pixel indices for each window,</span>
+    <span class="c1"># which we will continue to update</span>
+    <span class="n">x_base</span> <span class="o">=</span> <span class="n">histogram_peak</span><span class="p">(</span><span class="n">warped_frame</span><span class="p">)</span>
+    <span class="n">x_current</span> <span class="o">=</span> <span class="n">x_base</span>
+ 
+    <span class="c1"># Go through one window at a time</span>
+    <span class="n">confidence</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">window</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">no_of_windows</span><span class="p">):</span>
+       
+      <span class="c1"># Identify window boundaries in x and y (and right and left)</span>
+      <span class="n">win_y_low</span> <span class="o">=</span> <span class="n">warped_frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">window</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">window_height</span>
+      <span class="n">win_y_high</span> <span class="o">=</span> <span class="n">warped_frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">window</span> <span class="o">*</span> <span class="n">window_height</span>
+      <span class="n">win_x_low</span> <span class="o">=</span> <span class="n">x_current</span> <span class="o">-</span> <span class="n">margin</span>
+      <span class="n">win_x_high</span> <span class="o">=</span> <span class="n">x_current</span> <span class="o">+</span> <span class="n">margin</span>
+      <span class="n">cv2</span><span class="o">.</span><span class="n">rectangle</span><span class="p">(</span><span class="n">frame_sliding_window</span><span class="p">,(</span><span class="n">win_x_low</span><span class="p">,</span><span class="n">win_y_low</span><span class="p">),(</span>
+        <span class="n">win_x_high</span><span class="p">,</span><span class="n">win_y_high</span><span class="p">),</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span><span class="mi">255</span><span class="p">,</span><span class="mi">255</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+
+ 
+      <span class="c1"># Identify the nonzero pixels in x and y within the window</span>
+      <span class="n">good_inds</span> <span class="o">=</span> <span class="p">((</span><span class="n">nonzeroy</span> <span class="o">&gt;=</span> <span class="n">win_y_low</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">nonzeroy</span> <span class="o">&lt;</span> <span class="n">win_y_high</span><span class="p">)</span> <span class="o">&amp;</span> 
+                          <span class="p">(</span><span class="n">nonzerox</span> <span class="o">&gt;=</span> <span class="n">win_x_low</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span>
+                           <span class="n">nonzerox</span> <span class="o">&lt;</span> <span class="n">win_x_high</span><span class="p">))</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+                           
+      <span class="c1"># Append these indices to the lists</span>
+      <span class="n">lane_inds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">good_inds</span><span class="p">)</span>
+         
+      <span class="c1"># If you found &gt; minpix pixels, recenter next window on mean position</span>
+      <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">good_inds</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">minpix</span><span class="p">:</span>
+        <span class="n">x_current</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">nonzerox</span><span class="p">[</span><span class="n">good_inds</span><span class="p">]))</span>
+      <span class="n">confidence</span><span class="o">+=</span><span class="nb">len</span><span class="p">(</span><span class="n">good_inds</span><span class="p">)</span><span class="o">/</span><span class="n">minpix</span>        
+    <span class="c1"># Concatenate the arrays of indices</span>
+    <span class="n">lane_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">lane_inds</span><span class="p">)</span>
+ 
+    <span class="c1"># Extract the pixel coordinates for the left and right lane lines</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">nonzerox</span><span class="p">[</span><span class="n">lane_inds</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">nonzeroy</span><span class="p">[</span><span class="n">lane_inds</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">&lt;</span><span class="mi">2</span><span class="p">:</span>
+        <span class="n">confidence</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">-</span><span class="nb">min</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+          <span class="n">confidence</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">confidence</span><span class="o">/=</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">-</span><span class="nb">min</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">&lt;</span><span class="mi">3</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">&lt;</span><span class="mi">3</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span><span class="mi">0</span>
+    <span class="c1"># Fit a second order polynomial curve to the pixel coordinates for</span>
+    <span class="c1"># the left and right lane lines</span>
+    <span class="n">fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+             
+    <span class="k">return</span> <span class="n">fit</span><span class="p">,</span> <span class="n">confidence</span></div>
+
+<div class="viewcode-block" id="get_lane_line_previous_window"><a class="viewcode-back" href="../../../../stereo_robot.camera_utils.line_follow.html#stereo_robot.camera_utils.line_follow.line_follow_main.get_lane_line_previous_window">[docs]</a><span class="k">def</span> <span class="nf">get_lane_line_previous_window</span><span class="p">(</span><span class="n">warped_frame</span><span class="p">,</span> <span class="n">fit</span><span class="p">,</span><span class="n">MARGIN</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets x and y coordinates of the fit line used to overlay lane line on plot.</span>
+<span class="sd">    </span>
+<span class="sd">    Extended Summary</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    Use the lane line from the previous sliding window to get the parameters</span>
+<span class="sd">    for the polynomial line for filling in the lane line</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    warped_frame : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">        The thresholded birds-eye-view frame.  [dtype=uint8], [size=(h,w)]</span>
+<span class="sd">        </span>
+<span class="sd">    fit : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">        the coefficients of the 1st degree polynomial used to fit the line in the form x = fit[0]*y+fit[1].</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ploty : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">        The y indicies of the overlay polygon</span>
+<span class="sd">    fitx : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">        The x indicies of the overlay polygon</span>
+<span class="sd">                    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># margin is a sliding window parameter</span>
+    <span class="n">margin</span> <span class="o">=</span> <span class="n">MARGIN</span>
+ 
+    <span class="c1"># Find the x and y coordinates of all the nonzero </span>
+    <span class="c1"># (i.e. white) pixels in the frame.         </span>
+    <span class="n">nonzero</span> <span class="o">=</span> <span class="n">warped_frame</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()</span>  
+    <span class="n">nonzeroy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">nonzero</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">nonzerox</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">nonzero</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+         
+    <span class="c1"># Store lane pixel indices</span>
+    <span class="n">lane_inds</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="n">nonzerox</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">fit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">nonzeroy</span><span class="p">)</span> <span class="o">+</span> <span class="n">fit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">margin</span><span class="p">))</span> <span class="o">&amp;</span> \
+        <span class="p">(</span><span class="n">nonzerox</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">fit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">nonzeroy</span><span class="p">)</span> <span class="o">+</span> <span class="n">fit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">margin</span><span class="p">))</span>
+        <span class="p">)</span>
+ 
+    <span class="c1"># Get the lane line pixel locations</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">nonzerox</span><span class="p">[</span><span class="n">lane_inds</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">nonzeroy</span><span class="p">[</span><span class="n">lane_inds</span><span class="p">]</span>  
+ 
+    <span class="c1"># Fit a second order polynomial curve to each lane line</span>
+    <span class="n">fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    
+    <span class="c1"># Create the x and y values to plot on the image</span>
+<span class="c1">#     ploty = np.linspace(</span>
+<span class="c1">#       0, warped_frame.shape[0]-1, warped_frame.shape[0])</span>
+    <span class="n">ploty</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">y</span><span class="p">),</span><span class="nb">max</span><span class="p">(</span><span class="n">y</span><span class="p">),</span><span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">-</span><span class="nb">min</span><span class="p">(</span><span class="n">y</span><span class="p">)),</span><span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">fitx</span> <span class="o">=</span> <span class="n">fit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">ploty</span> <span class="o">+</span> <span class="n">fit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> 
+    
+    
+    <span class="k">return</span> <span class="n">ploty</span><span class="p">,</span><span class="n">fitx</span></div>
+
+<div class="viewcode-block" id="overlay_lane_lines"><a class="viewcode-back" href="../../../../stereo_robot.camera_utils.line_follow.html#stereo_robot.camera_utils.line_follow.line_follow_main.overlay_lane_lines">[docs]</a><span class="k">def</span> <span class="nf">overlay_lane_lines</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span><span class="n">fitx</span><span class="p">,</span><span class="n">ploty</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Overlay lane lines on an empty image</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    shape : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">        empty image of zeros to plot line overlay on. [dtype=uint8], [size=(h,w)]</span>
+<span class="sd">    ploty : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">        The y indicies of the overlay polygon</span>
+<span class="sd">    fitx : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">        The x indicies of the overlay polygon</span>
+<span class="sd">            </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">        shape :  &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">            empty image with overlayed fit line overlay on. [dtype=uint8], [size=(h,w)]</span>
+<span class="sd">    </span>
+<span class="sd">    Usage</span>
+<span class="sd">    -----</span>
+<span class="sd">    &gt;&gt;&gt; warp_zero = np.zeros_like(lane_line_markings)        # create an empty image of warped frame</span>
+<span class="sd">    &gt;&gt;&gt; shape = np.dstack((warp_zero, warp_zero, warp_zero)) # make with 3 columns</span>
+<span class="sd">    &gt;&gt;&gt; shape = overlay_lane_lines(shape,fitx,ploty)         # overlay lane line to it</span>
+<span class="sd">    &gt;&gt;&gt; unwarped = cv2.warpPerspective(                      # unwarp overlay to original</span>
+<span class="sd">    ...             shape1,                                  #  frame orientation</span>
+<span class="sd">    ...             self.inv_transformation_matrix,</span>
+<span class="sd">    ...             frame.shape[::-1][1:])</span>
+<span class="sd">    &gt;&gt;&gt; result = cv2.addWeighted(frame, 1, unwarped, 0.3, 0) # Add unwarped overlay to OG frame</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Generate an image to draw the lane lines on </span>
+<span class="c1">#     warp_zero = np.zeros_like(warped_frame).astype(np.uint8)</span>
+<span class="c1">#     color_warp = np.dstack((warp_zero, warp_zero, warp_zero))       </span>
+         
+    <span class="c1"># Recast the x and y points into usable format for cv2.fillPoly()</span>
+    <span class="n">pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span>
+                         <span class="n">fitx</span><span class="p">,</span> <span class="n">ploty</span><span class="p">]))])</span>
+    <span class="n">pts_left</span>  <span class="o">=</span> <span class="n">pts</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">pts_right</span> <span class="o">=</span> <span class="n">pts</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">pts_left</span><span class="p">,</span> <span class="n">pts_right</span><span class="p">))</span>
+         
+    <span class="c1"># Draw lane on the warped blank image</span>
+    <span class="n">cv2</span><span class="o">.</span><span class="n">fillPoly</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">([</span><span class="n">pts</span><span class="p">]),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+ 
+    <span class="c1"># Warp the blank back to original image space using inverse perspective </span>
+    <span class="c1"># matrix (Minv)</span>
+    <span class="k">return</span> <span class="n">shape</span></div>
+     
+    <span class="c1"># Combine the result with the original image</span>
+
+
+<div class="viewcode-block" id="get_endpoints"><a class="viewcode-back" href="../../../../stereo_robot.camera_utils.line_follow.html#stereo_robot.camera_utils.line_follow.line_follow_main.get_endpoints">[docs]</a><span class="k">def</span> <span class="nf">get_endpoints</span><span class="p">(</span><span class="n">ploty</span><span class="p">,</span><span class="n">fitx</span><span class="p">,</span><span class="n">h</span><span class="p">,</span><span class="n">w</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets top and bottom of fit line as a percentage of the ROI area.</span>
+<span class="sd">    </span>
+<span class="sd">    Extended Summary</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    The top/bottom points are expressed as (y,x), where y is the percentage of the point&#39;s height from the bottom (0-100), and x is the percentage of the point&#39;s distance from the center of the frame (-50 - 50).</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    shape : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">        empty image of zeros to plot line overlay on. [dtype=uint8], [size=(h,w)]</span>
+<span class="sd">    ploty : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">        The y indicies of the overlay polygon</span>
+<span class="sd">    fitx : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">        The x indicies of the overlay polygon</span>
+<span class="sd">    h : int</span>
+<span class="sd">        the height of the warped frame</span>
+<span class="sd">    w : int</span>
+<span class="sd">        the width of the warped frame</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pts : tuple</span>
+<span class="sd">        the coordinates of the top and bottom line coord expressed respectively as ((y_bot,x_bot),(y_top,x_top))</span>
+<span class="sd">    </span>
+<span class="sd">    circle_overlays : tuple</span>
+<span class="sd">        data to overlay circles on warped, threshed frame. See usage.</span>
+<span class="sd">    </span>
+<span class="sd">    text_overlays  : tuple</span>
+<span class="sd">        data to overlay coordinate text on warped, threshed frame. See usage.</span>
+<span class="sd">        </span>
+<span class="sd">    Usage</span>
+<span class="sd">    -----</span>
+<span class="sd">    &gt;&gt;&gt; pts,circles,putTexts = get_endpoints(ploty,fitx,h,w)</span>
+<span class="sd">    &gt;&gt;&gt; for circle,putText in zip(circle_overlays,text_overlays):</span>
+<span class="sd">    ...     cv2.putText(lane_line_markings_col,*putText)          # overlays are designed to easily be passed</span>
+<span class="sd">    ...     cv2.circle(lane_line_markings_col, *circle)           # using the astrix notation</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bot_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ploty</span><span class="o">==</span><span class="nb">max</span><span class="p">(</span><span class="n">ploty</span><span class="p">))[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>  <span class="c1">#min b/c camera is positioned at</span>
+    <span class="n">top_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ploty</span><span class="o">==</span><span class="nb">min</span><span class="p">(</span><span class="n">ploty</span><span class="p">))[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>  <span class="c1">#         the bottom of frame</span>
+    
+    <span class="n">top_y_pixel</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ploty</span><span class="p">[</span><span class="n">top_ind</span><span class="p">])</span>
+    <span class="n">bot_y_pixel</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ploty</span><span class="p">[</span><span class="n">bot_ind</span><span class="p">])</span>
+    <span class="n">top_x_pixel</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">fitx</span><span class="p">[</span><span class="n">top_ind</span><span class="p">])</span>
+    <span class="n">bot_x_pixel</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">fitx</span><span class="p">[</span><span class="n">bot_ind</span><span class="p">])</span>
+    
+    <span class="n">top_y</span> <span class="o">=</span> <span class="mi">100</span><span class="o">-</span><span class="n">top_y_pixel</span><span class="o">/</span><span class="n">h</span><span class="o">*</span><span class="mi">100</span>
+    <span class="n">bot_y</span> <span class="o">=</span> <span class="mi">100</span><span class="o">-</span><span class="n">bot_y_pixel</span><span class="o">/</span><span class="n">h</span><span class="o">*</span><span class="mi">100</span>
+    
+    <span class="n">top_x</span> <span class="o">=</span> <span class="n">top_x_pixel</span><span class="o">/</span><span class="n">w</span><span class="o">*</span><span class="mi">100</span> <span class="o">-</span> <span class="mi">50</span>
+    <span class="n">bot_x</span> <span class="o">=</span> <span class="n">bot_x_pixel</span><span class="o">/</span><span class="n">w</span><span class="o">*</span><span class="mi">100</span> <span class="o">-</span> <span class="mi">50</span>
+    
+    <span class="n">rad</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">font_size</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">top_text</span> <span class="o">=</span>  <span class="s2">&quot;TOP: (</span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">top_y</span><span class="p">),</span><span class="nb">int</span><span class="p">(</span><span class="n">top_x</span><span class="p">))</span>
+    <span class="n">top_cv2_circle</span> <span class="o">=</span> <span class="p">((</span><span class="n">top_x_pixel</span><span class="p">,</span><span class="n">top_y_pixel</span><span class="p">),</span><span class="n">rad</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">255</span><span class="p">),</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">top_cv2_putText</span> <span class="o">=</span> <span class="p">(</span><span class="n">top_text</span><span class="p">,</span>
+                        <span class="p">(</span><span class="n">top_x_pixel</span><span class="p">,</span> <span class="n">top_y_pixel</span> <span class="o">+</span> <span class="p">(</span><span class="n">rad</span><span class="o">+</span><span class="mi">10</span><span class="o">*</span><span class="n">font_size</span><span class="p">)),</span>
+                        <span class="n">cv2</span><span class="o">.</span><span class="n">FONT_HERSHEY_SIMPLEX</span><span class="p">,</span>
+                        <span class="mf">0.5</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+    
+    <span class="n">bot_text</span> <span class="o">=</span>  <span class="s2">&quot;(BOT: </span><span class="si">{}</span><span class="s2">,</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">bot_y</span><span class="p">),</span><span class="nb">int</span><span class="p">(</span><span class="n">bot_x</span><span class="p">))</span>
+    <span class="n">bot_cv2_circle</span> <span class="o">=</span> <span class="p">((</span><span class="n">bot_x_pixel</span><span class="p">,</span><span class="n">bot_y_pixel</span><span class="p">),</span><span class="n">rad</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">255</span><span class="p">),</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">bot_cv2_putText</span> <span class="o">=</span> <span class="p">(</span><span class="n">bot_text</span><span class="p">,</span>
+                        <span class="p">(</span><span class="n">bot_x_pixel</span><span class="p">,</span> <span class="n">bot_y_pixel</span> <span class="o">-</span> <span class="p">(</span><span class="n">rad</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">font_size</span><span class="p">)),</span>
+                        <span class="n">cv2</span><span class="o">.</span><span class="n">FONT_HERSHEY_SIMPLEX</span><span class="p">,</span>
+                        <span class="mf">0.5</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+
+    
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="p">((</span><span class="n">bot_y</span><span class="p">,</span><span class="n">bot_x</span><span class="p">),(</span><span class="n">top_y</span><span class="p">,</span><span class="n">top_x</span><span class="p">)),</span>
+        <span class="p">(</span><span class="n">top_cv2_circle</span><span class="p">,</span><span class="n">bot_cv2_circle</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">top_cv2_putText</span><span class="p">,</span><span class="n">bot_cv2_putText</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="LineFollow"><a class="viewcode-back" href="../../../../stereo_robot.camera_utils.line_follow.html#stereo_robot.camera_utils.line_follow.line_follow_main.LineFollow">[docs]</a><span class="k">class</span> <span class="nc">LineFollow</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;A container to initialize, store and access find_line and it&#39;s attributes.</span>
+<span class="sd">    </span>
+<span class="sd">    Extended Summary</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    Look at LineFollow.find_line for details about how this works</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    init_frame : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">        a camera frame used to get size information used for find_line</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    self</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This class also contains QR reading. See QR_scan for some implementation notes and future changes.</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    get_perspective_transform_matricies</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">CONFIG</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;padding_percentage&#39;</span><span class="p">:</span><span class="mf">0.25</span><span class="p">,</span>
+        <span class="s1">&#39;plot&#39;</span><span class="p">:</span><span class="kc">True</span>
+        <span class="p">}</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">init_frame</span><span class="p">):</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">init_frame</span>
+        
+        <span class="n">width</span><span class="p">,</span><span class="n">height</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="n">padding</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.25</span> <span class="o">*</span> <span class="n">width</span><span class="p">)</span>
+        <span class="n">DESIRED_ROI_POINTS</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">([</span>
+          <span class="p">[</span><span class="n">padding</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="c1"># Top-left corner</span>
+          <span class="p">[</span><span class="n">padding</span><span class="p">,</span> <span class="n">height</span><span class="p">],</span> <span class="c1"># Bottom-left corner         </span>
+          <span class="p">[</span><span class="n">width</span><span class="o">-</span><span class="n">padding</span><span class="p">,</span> <span class="n">height</span><span class="p">],</span> <span class="c1"># Bottom-right corner</span>
+          <span class="p">[</span><span class="n">width</span><span class="o">-</span><span class="n">padding</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="c1"># Top-right corner</span>
+        <span class="p">])</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">DESIRED_ROI_POINTS</span> <span class="o">=</span> <span class="p">(</span>
+             <span class="n">width</span><span class="p">,</span>     <span class="n">height</span><span class="p">,</span>     <span class="n">DESIRED_ROI_POINTS</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">MARGIN</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="mi">1</span><span class="o">/</span><span class="mi">12</span><span class="p">)</span> <span class="o">*</span> <span class="n">width</span><span class="p">)</span>  <span class="c1"># Window width is +/- margin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">MINPIX</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="mi">1</span><span class="o">/</span><span class="mi">24</span><span class="p">)</span> <span class="o">*</span> <span class="n">width</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">transformation_matrix</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">inv_transformation_matrix</span> <span class="o">=</span> <span class="n">get_perspective_transform_matricies</span><span class="p">(</span><span class="n">ROI_POINTS</span><span class="p">,</span><span class="n">DESIRED_ROI_POINTS</span><span class="p">)</span>
+                      
+<div class="viewcode-block" id="LineFollow.find_line"><a class="viewcode-back" href="../../../../stereo_robot.camera_utils.line_follow.html#stereo_robot.camera_utils.line_follow.line_follow_main.LineFollow.find_line">[docs]</a>    <span class="k">def</span> <span class="nf">find_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">frame</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Processes a frame to detect Line, and QR code.</span>
+<span class="sd">        </span>
+<span class="sd">        Extended Summary</span>
+<span class="sd">        ----------------</span>
+<span class="sd">        This processes the</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        frame : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">            Current frame</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">            ret : bool</span>
+<span class="sd">                True if a lane line or barcode were detected</span>
+<span class="sd">            lane_line_markings_col : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">                The warped and thresholded frame annotated with line top/bottom and QR code result. [size=(h,w,3)]</span>
+<span class="sd">            result : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">                The original frame annotated with line the fit line and QR code result.</span>
+<span class="sd">            p1 : tuple of int</span>
+<span class="sd">                bottom coordinate of line in the warped coordinate system</span>
+<span class="sd">            p2 : tuple of int</span>
+<span class="sd">                top coordinate of line in the warped coordinate system</span>
+<span class="sd">            confidence : int</span>
+<span class="sd">                confidence estimate of the line. (0-100)</span>
+<span class="sd">            barcodeData : str or None</span>
+<span class="sd">                the data from the scanned barcode. If no new data is found, the value is none.</span>
+<span class="sd">        </span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Psuedo Code for this function:</span>
+<span class="sd">         - Warps frame to birds eye view</span>
+<span class="sd">         - Scans QR code.</span>
+<span class="sd">         - Thresholds line markings</span>
+<span class="sd">         - Fits curve to line with confidence</span>
+<span class="sd">         - Creates overlay</span>
+<span class="sd">         </span>
+<span class="sd">        May be better to threshold before warp for line following, however the warp is used in QR code scanning too so it currently makes more sense to warp the full picture. I also don&#39;t like that QR scanning happens inline with the line following. It slows down loop times. If I were to prioritize things for safety, person detection should be first priority, line following should be second priority, and QR should be third. May be better to move QR scanning into its own process, however we already have 3 processes and only 4 cores.</span>
+<span class="sd">        </span>
+<span class="sd">        Should add functionality to disable plotting and save steps</span>
+<span class="sd">        </span>
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        stereo_robot.camera_utils.line_follow.ROI_select.main:</span>
+<span class="sd">            A UI is used to select the roi_points</span>
+<span class="sd">        stereo_robot.camera_utils.line_follow.calib_color_thresh.main:</span>
+<span class="sd">            A UI used to select yellow Threshold</span>
+<span class="sd">        get_line_markings : Thresholds line markings</span>
+<span class="sd">        get_lane_line_indices_sliding_windows : Fits curve to line with confidence</span>
+<span class="sd">        get_lane_line_previous_window : Gets points fit curve for overlay</span>
+<span class="sd">        LineFollow.QR_scan : looks for QR</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Grab class attributes to make code cleaner.</span>
+        <span class="n">width</span><span class="p">,</span><span class="n">height</span><span class="p">,</span><span class="n">DESIRED_ROI_POINTS</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">DESIRED_ROI_POINTS</span>
+        <span class="n">MARGIN</span><span class="p">,</span><span class="n">MINPIX</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">MARGIN</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">MINPIX</span>
+        
+        <span class="c1"># Get birds eye view</span>
+        <span class="n">warped_frame</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">warpPerspective</span><span class="p">(</span>
+                            <span class="n">frame</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">transformation_matrix</span><span class="p">,</span>
+                            <span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:],</span>
+                            <span class="n">flags</span><span class="o">=</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">INTER_LINEAR</span><span class="p">)</span>
+                            <span class="p">)</span>
+        
+        <span class="c1">#Thresholds line markings</span>
+        <span class="n">lane_line_markings</span><span class="o">=</span><span class="n">get_line_markings</span><span class="p">(</span><span class="n">warped_frame</span><span class="p">)</span>
+        
+        <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s2">&quot;warped_frame&quot;</span><span class="p">,</span><span class="n">warped_frame</span><span class="p">)</span>  <span class="c1"># Probably shouldn&#39;t have this in here? Another good reason to</span>
+                                                <span class="c1"># move warpPerspective to CameraClient level.</span>
+        <span class="c1"># Fit line</span>
+        <span class="n">fit</span><span class="p">,</span><span class="n">confidence</span> <span class="o">=</span> <span class="n">get_lane_line_indices_sliding_windows</span><span class="p">(</span>
+            <span class="n">lane_line_markings</span><span class="p">,</span><span class="n">MINPIX</span><span class="p">,</span><span class="n">MARGIN</span><span class="p">)</span>
+        
+        <span class="c1">#Check for barcode</span>
+        <span class="n">barcodeData</span><span class="p">,</span><span class="n">cv2_rectangle</span><span class="p">,</span><span class="n">cv2_putText</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">QR_scan</span><span class="p">(</span><span class="n">warped_frame</span><span class="p">)</span>
+        
+        <span class="n">lane_line_markings_col</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span>
+                        <span class="n">lane_line_markings</span><span class="p">,</span>
+                        <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_GRAY2BGR</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+                        
+        <span class="c1"># If there is something to display (either QR or line), make a blank shape to overlay</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">fit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">barcodeData</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">h</span><span class="p">,</span><span class="n">w</span> <span class="o">=</span> <span class="n">lane_line_markings</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">warp_zero</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">lane_line_markings</span><span class="p">)</span>
+            <span class="n">shape1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">((</span><span class="n">warp_zero</span><span class="p">,</span> <span class="n">warp_zero</span><span class="p">,</span> <span class="n">warp_zero</span><span class="p">))</span>
+            <span class="c1"># if there is a line to overlay</span>
+            <span class="k">if</span> <span class="n">fit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># get line polygon to overlay</span>
+                <span class="n">ploty</span><span class="p">,</span><span class="n">fitx</span> <span class="o">=</span> <span class="n">get_lane_line_previous_window</span><span class="p">(</span>
+                    <span class="n">lane_line_markings</span><span class="p">,</span> <span class="n">fit</span><span class="p">,</span><span class="n">MARGIN</span><span class="p">)</span>
+                <span class="c1"># overlay line polygon on the blank shape</span>
+                <span class="n">shape1</span> <span class="o">=</span> <span class="n">overlay_lane_lines</span><span class="p">(</span>
+                    <span class="n">shape1</span><span class="p">,</span>
+                    <span class="n">fitx</span><span class="p">,</span><span class="n">ploty</span><span class="p">)</span>
+                <span class="c1"># grab top and bottom points in birds eye view coords (i.e. 1-100) and their overlays</span>
+                <span class="p">(</span><span class="n">p1</span><span class="p">,</span><span class="n">p2</span><span class="p">),</span><span class="n">circles</span><span class="p">,</span><span class="n">putTexts</span> <span class="o">=</span> <span class="n">get_endpoints</span><span class="p">(</span><span class="n">ploty</span><span class="p">,</span><span class="n">fitx</span><span class="p">,</span><span class="n">h</span><span class="p">,</span><span class="n">w</span><span class="p">)</span>
+                <span class="c1"># plot overlays</span>
+                <span class="k">for</span> <span class="n">circle</span><span class="p">,</span><span class="n">putText</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">circles</span><span class="p">,</span><span class="n">putTexts</span><span class="p">):</span>
+                    <span class="n">cv2</span><span class="o">.</span><span class="n">putText</span><span class="p">(</span><span class="n">lane_line_markings_col</span><span class="p">,</span><span class="o">*</span><span class="n">putText</span><span class="p">)</span>
+                    <span class="n">cv2</span><span class="o">.</span><span class="n">circle</span><span class="p">(</span><span class="n">lane_line_markings_col</span><span class="p">,</span><span class="o">*</span><span class="n">circle</span><span class="p">)</span>            
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">p1</span><span class="p">,</span><span class="n">p2</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+            <span class="c1"># if there is a QR code to overlay</span>
+            <span class="k">if</span> <span class="n">barcodeData</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">cv2</span><span class="o">.</span><span class="n">putText</span><span class="p">(</span><span class="n">shape1</span><span class="p">,</span><span class="o">*</span><span class="n">cv2_putText</span><span class="p">)</span>
+                <span class="n">cv2</span><span class="o">.</span><span class="n">rectangle</span><span class="p">(</span><span class="n">shape1</span><span class="p">,</span><span class="o">*</span><span class="n">cv2_rectangle</span><span class="p">)</span>
+            <span class="c1"># unwarp the overlay from birds eye view</span>
+            <span class="n">unwarped</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">warpPerspective</span><span class="p">(</span>
+                <span class="n">shape1</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inv_transformation_matrix</span><span class="p">,</span>
+                <span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="p">)</span>
+            <span class="c1"># and add it to the original</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">addWeighted</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">unwarped</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="c1"># TODO: consider moving all perspective warping and QR code out of line follow</span>
+            
+<span class="c1">#             print(&quot;CKP Z1&quot;)</span>
+            <span class="k">return</span> <span class="kc">True</span><span class="p">,</span><span class="n">lane_line_markings_col</span><span class="p">,</span><span class="n">result</span><span class="p">,</span><span class="n">p1</span><span class="p">,</span><span class="n">p2</span><span class="p">,</span><span class="n">confidence</span><span class="p">,</span><span class="n">barcodeData</span>
+        <span class="k">else</span><span class="p">:</span>
+<span class="c1">#             print(&quot;CKP Z2&quot;)</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span><span class="n">lane_line_markings_col</span><span class="p">,</span><span class="n">result</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">barcodeData</span></div>
+            
+    
+    
+<div class="viewcode-block" id="LineFollow.QR_scan"><a class="viewcode-back" href="../../../../stereo_robot.camera_utils.line_follow.html#stereo_robot.camera_utils.line_follow.line_follow_main.LineFollow.QR_scan">[docs]</a>    <span class="k">def</span> <span class="nf">QR_scan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">warped_frame</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks birds eye view for barcodes</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        warped_frame : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">            The thresholded birds-eye-view frame.  [dtype=uint8], [size=(h,w)]</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        barcodeData : str or None</span>
+<span class="sd">            The contents of the QR code. Returns None if no QR code was detected</span>
+<span class="sd">        cv2_rectangle : tuple of args or None</span>
+<span class="sd">            A set of arguments to overlay a bounding box with cv2.Rectangle. see usage for example.</span>
+<span class="sd">            </span>
+<span class="sd">        cv2_putText : tuple of args or None</span>
+<span class="sd">            A set of arguments to overlay barcodeData in cv2.Rectangle. see usage for example.</span>
+<span class="sd">        </span>
+<span class="sd">        Usage</span>
+<span class="sd">        -----</span>
+<span class="sd">        &gt;&gt;&gt; barcodeData,cv2_rectangle,cv2_putText = LineFollow.QR_scan(warped_frame)</span>
+<span class="sd">        &gt;&gt;&gt; if barcodeData is not None:</span>
+<span class="sd">        ...     cv2.putText(warped_frame,*cv2_putText)</span>
+<span class="sd">        ...     cv2.rectangle(warped_frame,*cv2_rectangle)</span>
+<span class="sd">            </span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Would be cleaner to have QR scanning happen outside of this class. As a continuation of the notes in line_follow, one solution of this is to warp the frame outside of this class and pass the warped frame in. If this were done, QR_scan could be moved to its own module about global navigation. The warped frame would be passed in to it at the camera_client level instead, where camera client could fork another process for QR reading.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">warped_frame</span>
+        <span class="n">barcodes</span> <span class="o">=</span> <span class="n">pyzbar</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">barcodes</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">barcode</span> <span class="ow">in</span> <span class="n">barcodes</span><span class="p">:</span>  <span class="c1"># don&#39;t have time to check if its indexable</span>
+                <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">w</span><span class="p">,</span><span class="n">h</span><span class="p">)</span> <span class="o">=</span> <span class="n">barcode</span><span class="o">.</span><span class="n">rect</span>
+                <span class="n">barcodeData</span> <span class="o">=</span> <span class="n">barcode</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+                <span class="n">barcodeType</span> <span class="o">=</span> <span class="n">barcode</span><span class="o">.</span><span class="n">type</span>
+                <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">barcodeData</span><span class="p">,</span> <span class="n">barcodeType</span><span class="p">)</span>
+                <span class="n">cv2_rectangle</span> <span class="o">=</span> <span class="p">((</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),(</span><span class="n">x</span><span class="o">+</span><span class="n">w</span><span class="p">,</span><span class="n">y</span><span class="o">+</span><span class="n">h</span><span class="p">),(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">255</span><span class="p">),</span><span class="mi">2</span><span class="p">)</span>
+                <span class="n">cv2_putText</span> <span class="o">=</span> <span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">-</span> <span class="mi">10</span><span class="p">),</span> <span class="n">cv2</span><span class="o">.</span><span class="n">FONT_HERSHEY_SIMPLEX</span><span class="p">,</span>
+                        <span class="mf">0.5</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">barcodeData</span><span class="p">,</span><span class="n">cv2_rectangle</span><span class="p">,</span><span class="n">cv2_putText</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span></div></div>
+        
+        
+        
+<div class="viewcode-block" id="cam_read"><a class="viewcode-back" href="../../../../stereo_robot.camera_utils.line_follow.html#stereo_robot.camera_utils.line_follow.line_follow_main.cam_read">[docs]</a><span class="k">def</span> <span class="nf">cam_read</span><span class="p">(</span><span class="n">camera</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Camera utility to retrieve and split a stereo pair frame.</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function is sprinkled in almost every module to be used in the __name__==&quot;__main__&quot; scrip test. Instances of this utility should be placed in one module.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ret</span><span class="p">,</span><span class="n">frame</span> <span class="o">=</span> <span class="n">camera</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ret</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Could not read camera. Check cables. Might need to use legacy camera drivers&quot;</span><span class="p">)</span>
+    <span class="n">h</span><span class="p">,</span><span class="n">w</span><span class="p">,</span><span class="n">c</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">cut_left</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[:,:</span><span class="nb">int</span><span class="p">(</span><span class="n">w</span><span class="o">/</span><span class="mi">2</span><span class="p">)]</span>
+    <span class="n">cut_right</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[:,</span><span class="nb">int</span><span class="p">(</span><span class="n">w</span><span class="o">/</span><span class="mi">2</span><span class="p">):]</span>
+    
+    <span class="n">left</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">cut_left</span><span class="p">,(</span><span class="n">w</span><span class="p">,</span><span class="n">h</span><span class="p">))</span>
+    <span class="n">right</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">cut_right</span><span class="p">,(</span><span class="n">w</span><span class="p">,</span><span class="n">h</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">ret</span><span class="p">,</span><span class="n">left</span></div>
+    
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">cv2</span><span class="o">.</span><span class="n">namedWindow</span><span class="p">(</span><span class="s1">&#39;original&#39;</span><span class="p">)</span>
+    <span class="n">cv2</span><span class="o">.</span><span class="n">namedWindow</span><span class="p">(</span><span class="s1">&#39;lane_line_markings&#39;</span><span class="p">)</span>
+    <span class="n">cv2</span><span class="o">.</span><span class="n">namedWindow</span><span class="p">(</span><span class="s1">&#39;result&#39;</span><span class="p">)</span>
+    
+    <span class="n">cam</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">ret</span><span class="p">,</span><span class="n">frame</span> <span class="o">=</span> <span class="n">cam_read</span><span class="p">(</span><span class="n">cam</span><span class="p">)</span>
+    
+    <span class="n">line</span> <span class="o">=</span> <span class="n">LineFollow</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+    
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">ret</span><span class="p">,</span><span class="n">frame</span> <span class="o">=</span> <span class="n">cam_read</span><span class="p">(</span><span class="n">cam</span><span class="p">)</span>
+        
+        <span class="n">ret</span><span class="p">,</span><span class="n">lane_line_markings</span><span class="p">,</span><span class="n">result</span><span class="p">,</span><span class="n">p1</span><span class="p">,</span><span class="n">p2</span><span class="p">,</span><span class="n">confidence</span><span class="p">,</span><span class="n">barcodeData</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">find_line</span><span class="p">(</span><span class="n">frame</span><span class="p">,)</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s1">&#39;original&#39;</span><span class="p">,</span><span class="n">frame</span><span class="p">)</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s1">&#39;lane_line_markings&#39;</span><span class="p">,</span><span class="n">lane_line_markings</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s1">&#39;result&#39;</span><span class="p">,</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s1">&#39;result&#39;</span><span class="p">,</span><span class="n">frame</span><span class="p">)</span>
+        
+        <span class="n">key</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;q&#39;</span><span class="p">):</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">destroyAllWindows</span><span class="p">()</span>
+            <span class="k">break</span>
+        
+        
+        
+        
+        
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1">#if False:#__name__ == &#39;__main__&#39;:  overwriting this to use the find_line class</span>
+<span class="c1">#    cam = cv2.VideoCapture(0)</span>
+<span class="c1">#    ret,frame = cam_read(cam)</span>
+<span class="c1">#    result = frame</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1">#    cv2.namedWindow(&#39;original&#39;)</span>
+<span class="c1">#    cv2.namedWindow(&#39;result&#39;)</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1">#    width,height = frame.shape[::-1][1:]</span>
+<span class="c1">#    padding = int(0.25 * width)</span>
+<span class="c1">#    DESIRED_ROI_POINTS = np.float32([</span>
+<span class="c1">#      [padding, 0], # Top-left corner</span>
+<span class="c1">#      [padding, height], # Bottom-left corner</span>
+<span class="c1">#      [width-padding, height], # Bottom-right corner</span>
+<span class="c1">#      [width-padding, 0] # Top-right corner</span>
+<span class="c1">#    ])</span>
+<span class="c1">#</span>
+<span class="c1">#    MARGIN = int((1/12) * width)  # Window width is +/- margin</span>
+<span class="c1">#    MINPIX = int((1/24) * width)</span>
+<span class="c1">#</span>
+<span class="c1">#    while True:</span>
+<span class="c1">#        ret,frame = cam_read(cam)</span>
+<span class="c1">#        cv2.imshow(&#39;original&#39;,frame)</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1">#        warped_frame,inv_mat = perspective_transform(</span>
+<span class="c1">#            frame,</span>
+<span class="c1">#            (width,height),</span>
+<span class="c1">#            ROI_POINTS,</span>
+<span class="c1">#            DESIRED_ROI_POINTS)</span>
+<span class="c1">#</span>
+<span class="c1">#        lane_line_markings=get_line_markings(warped_frame)</span>
+<span class="c1">#</span>
+<span class="c1">#        fit = get_lane_line_indices_sliding_windows(</span>
+<span class="c1">#            lane_line_markings)</span>
+<span class="c1">#        if fit is not None:</span>
+<span class="c1">#            ploty,fitx = get_lane_line_previous_window(</span>
+<span class="c1">#                lane_line_markings, fit)</span>
+<span class="c1">#</span>
+<span class="c1">#            shape = overlay_lane_lines(</span>
+<span class="c1">#                lane_line_markings,</span>
+<span class="c1">#                fitx,ploty)</span>
+<span class="c1">#</span>
+<span class="c1">#            unwarped = cv2.warpPerspective(</span>
+<span class="c1">#                shape,</span>
+<span class="c1">#                inv_mat,</span>
+<span class="c1">#                (frame.shape[1],</span>
+<span class="c1">#                 frame.shape[0])</span>
+<span class="c1">#                )</span>
+<span class="c1">#</span>
+<span class="c1">#            result = cv2.addWeighted(frame, 1, unwarped, 0.3, 0)</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1">#        cv2.imshow(&#39;lane_line_markings&#39;,lane_line_markings)</span>
+<span class="c1">#        cv2.imshow(&#39;result&#39;,result)</span>
+<span class="c1">#        key = cv2.waitKey(1)</span>
+<span class="c1">#        if key == ord(&#39;q&#39;):</span>
+<span class="c1">#            cv2.destroyAllWindows()</span>
+<span class="c1">#            break</span>
+<span class="c1">#</span>
+<span class="c1">#        if key == ord(&#39;s&#39;):</span>
+<span class="c1">#            cv2.imwrite(&#39;./QR_CLOSE.png&#39;,result)</span>
+<span class="c1">#</span>
+<span class="c1">#        if key == ord(&#39;d&#39;):</span>
+<span class="c1">#            cv2.imwrite(&#39;./QR_FAR.png&#39;,result)</span>
+<span class="c1">#</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Nicholas Thorpe.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

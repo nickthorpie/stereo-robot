@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>stereo_robot.camera_utils.line_follow.ROI_select &mdash; stereo-robot 0.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> stereo-robot
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../setup.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source_code.html">Stereo Robot Source Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../setup_sabertooth.html">Sabretooth Setup and Calibration</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">stereo-robot</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>stereo_robot.camera_utils.line_follow.ROI_select</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for stereo_robot.camera_utils.line_follow.ROI_select</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Interactive GUI for selecting the region of interest.</span>
+
+<span class="sd">This function should only be called from an if __name__==&quot;__main__&quot; wrapper,</span>
+<span class="sd">and has a catcher if not. The script has 2 menus</span>
+
+<span class="sd">Controls:</span>
+<span class="sd"> | **[Double Click]**   - Select ROI corner. Make selection in the order BL, TL, TR, BR.</span>
+<span class="sd"> | **[z]**              - Undoes the most recent ROI corner</span>
+<span class="sd"> | **[s]**              - Saves ROI points to ROI_select.json. Will only save if 4 corners are selected</span>
+<span class="sd"> | **[q]**              - Exit GUI</span>
+
+<span class="sd">Notes</span>
+<span class="sd">-----</span>
+<span class="sd">Need to change save location from the json method to the Config Module. Further, this should be converted to SI units instead of pixels as discussed in NEXT STEPS -&gt; CONVERT TO SI</span>
+<span class="sd">    </span>
+<span class="sd">This GUI should probably be moved to the calibration function. Result is saved in a ROI_select.json file. This should be converted to work with the new Config module.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">cv2</span><span class="o">,</span> <span class="nn">json</span><span class="o">,</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)))</span>
+
+
+<div class="viewcode-block" id="cam_read"><a class="viewcode-back" href="../../../../stereo_robot.camera_utils.line_follow.html#stereo_robot.camera_utils.line_follow.ROI_select.cam_read">[docs]</a><span class="k">def</span> <span class="nf">cam_read</span><span class="p">(</span><span class="n">camera</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Camera utility to retrieve and split a stereo pair frame.</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function is sprinkled in almost every module to be used in the __name__==&quot;__main__&quot; scrip test. Instances of this utility should be placed in one module.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ret</span><span class="p">,</span><span class="n">frame</span> <span class="o">=</span> <span class="n">camera</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ret</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Could not read camera. Check cables. Might need to use legacy camera drivers&quot;</span><span class="p">)</span>
+    <span class="n">h</span><span class="p">,</span><span class="n">w</span><span class="p">,</span><span class="n">c</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">shape</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">cut_left</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[:,:</span><span class="nb">int</span><span class="p">(</span><span class="n">w</span><span class="o">/</span><span class="mi">2</span><span class="p">)]</span>
+    <span class="n">cut_right</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[:,</span><span class="nb">int</span><span class="p">(</span><span class="n">w</span><span class="o">/</span><span class="mi">2</span><span class="p">):]</span>
+    
+    <span class="n">left</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">cut_left</span><span class="p">,(</span><span class="n">w</span><span class="p">,</span><span class="n">h</span><span class="p">))</span>
+    <span class="n">right</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">cut_right</span><span class="p">,(</span><span class="n">w</span><span class="p">,</span><span class="n">h</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">ret</span><span class="p">,</span><span class="n">left</span></div>
+
+<span class="c1">## Part 2: Select colors that fit</span>
+
+<div class="viewcode-block" id="perspective_transform"><a class="viewcode-back" href="../../../../stereo_robot.camera_utils.line_follow.html#stereo_robot.camera_utils.line_follow.ROI_select.perspective_transform">[docs]</a><span class="k">def</span> <span class="nf">perspective_transform</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span><span class="n">orig_frame_shape</span><span class="p">,</span><span class="n">roi_points</span><span class="p">,</span><span class="n">desired_roi_points</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Perform the perspective transform.</span>
+
+<span class="sd">    Extended Summary</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    Calculates the perspective transform&#39;s transformation matrix and transforms frame.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    frame : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">        Current frame</span>
+
+<span class="sd">    orig_frame_shape : tuple of int</span>
+<span class="sd">        The shape of the original frame</span>
+<span class="sd">    </span>
+<span class="sd">    roi_points : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">        ROI points selected using ROI_select.py</span>
+<span class="sd">    </span>
+<span class="sd">    desired_roi_points : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">        The shape of the original frame</span>
+<span class="sd">            </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    warped_frame : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">        The  birds-eye-view frame.  [dtype=uint8], [size=(h,w,3)]</span>
+<span class="sd">        </span>
+<span class="sd">    inv_transformation_matrix : &lt;class &#39;numpy.ndarray&#39;&gt;</span>
+<span class="sd">        the transformation matrix used to convert birds eye view coords to original frame coords</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    From Addison Sears Collins:</span>
+
+<span class="sd">     | &quot;Imagine you’re a bird. You’re flying high above the road lanes below.  From a birds-eye view, the lines on either side of the lane look like they are parallel</span>
+<span class="sd">     | However, from the perspective of the camera mounted on a car below, the lane lines make a trapezoid-like shape. We can’t properly calculate the radius of curvature of the lane because, from the camera’s perspective, the lane width appears to decrease the farther away you get from the car.</span>
+<span class="sd">     | In fact, way out on the horizon, the lane lines appear to converge to a point (known in computer vision jargon as vanishing point).</span>
+
+<span class="sd">    This is different from the one found in line_follow_main because it calculates perspective transform every time since it is changes every time we change the ROI corners. It&#39;s slower, but we don&#39;t need speed for this routine.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Calculate the transformation matrix</span>
+    <span class="n">transformation_matrix</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">getPerspectiveTransform</span><span class="p">(</span>
+      <span class="n">roi_points</span><span class="p">,</span> <span class="n">desired_roi_points</span><span class="p">)</span>
+
+    <span class="c1"># Calculate the inverse transformation matrix           </span>
+    <span class="n">inv_transformation_matrix</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">getPerspectiveTransform</span><span class="p">(</span>
+      <span class="n">desired_roi_points</span><span class="p">,</span> <span class="n">roi_points</span><span class="p">)</span>
+
+    <span class="c1"># Perform the transform using the transformation matrix</span>
+    <span class="n">warped_frame</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">warpPerspective</span><span class="p">(</span>
+      <span class="n">frame</span><span class="p">,</span> <span class="n">transformation_matrix</span><span class="p">,</span> <span class="n">orig_frame_shape</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="p">(</span>
+     <span class="n">cv2</span><span class="o">.</span><span class="n">INTER_LINEAR</span><span class="p">))</span>
+    
+<span class="c1">#     (thresh, binary_warped) = cv2.threshold(</span>
+<span class="c1">#       warped_frame, 127, 255, cv2.THRESH_BINARY)           </span>
+<span class="c1">#     warped_frame = binary_warped</span>
+    
+    <span class="k">return</span> <span class="n">warped_frame</span><span class="p">,</span><span class="n">inv_transformation_matrix</span></div>
+
+<span class="k">def</span> <span class="nf">_main</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Interactive GUI for selecting the region of interest.</span>
+<span class="sd">    </span>
+<span class="sd">    Extended Summary</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    This function should only be called from an if __name__==&quot;__main__&quot; wrapper,</span>
+<span class="sd">    and has a catcher if not. The script has 2 menus</span>
+<span class="sd">    </span>
+<span class="sd">    Controls:</span>
+<span class="sd">     | **q** Exit GUI</span>
+<span class="sd">     | **Double Click** Select ROI corner. Make selection in the order BL, TL, TR, BR.</span>
+<span class="sd">     | **z** Undoes the most recent ROI corner</span>
+<span class="sd">     | **s** Saves ROI points to ROI_select.json. Will only save if 4 corners are selected</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Need to change save location from the json method to the Config Module. Further, this should be converted to SI units instead of pixels as discussed in NEXT STEPS -&gt; CONVERT TO SI</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="vm">__name__</span><span class="o">!=</span><span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Cannot use this function in this context. Only intended for use in ROI_select.py&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="n">ROI_POINTS</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">def</span> <span class="nf">mouse_event</span><span class="p">(</span><span class="n">event</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">flags</span><span class="p">,</span><span class="n">param</span><span class="p">):</span>
+        <span class="k">global</span> <span class="n">mouseX</span><span class="p">,</span><span class="n">mouseY</span>
+        <span class="k">if</span> <span class="n">event</span> <span class="o">==</span> <span class="n">cv2</span><span class="o">.</span><span class="n">EVENT_LBUTTONDBLCLK</span><span class="p">:</span>
+    <span class="c1">#         cv2.circle(frame,(x,y),3,(0,255,255),-1)</span>
+            <span class="n">ROI_POINTS</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">])</span>
+            <span class="n">mouseX</span><span class="p">,</span><span class="n">mouseY</span> <span class="o">=</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span>
+            
+    <span class="n">cam</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">ret</span><span class="p">,</span><span class="n">frame</span><span class="o">=</span><span class="n">cam_read</span><span class="p">(</span><span class="n">cam</span><span class="p">)</span>
+
+    <span class="n">cv2</span><span class="o">.</span><span class="n">namedWindow</span><span class="p">(</span><span class="s2">&quot;orig_frame&quot;</span><span class="p">)</span>
+    <span class="n">cv2</span><span class="o">.</span><span class="n">namedWindow</span><span class="p">(</span><span class="s2">&quot;warped frame&quot;</span><span class="p">)</span>
+    <span class="n">cv2</span><span class="o">.</span><span class="n">setMouseCallback</span><span class="p">(</span><span class="s1">&#39;orig_frame&#39;</span><span class="p">,</span><span class="n">mouse_event</span><span class="p">)</span>
+    <span class="n">top_adj</span><span class="o">=</span><span class="mi">0</span>
+    <span class="n">bot_adj</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">ret</span><span class="p">,</span><span class="n">frame</span><span class="o">=</span><span class="n">cam_read</span><span class="p">(</span><span class="n">cam</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ret</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;failed to grab frame&quot;</span><span class="p">)</span>
+            <span class="k">break</span>
+        
+        <span class="n">shapes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">ROI</span> <span class="ow">in</span> <span class="n">ROI_POINTS</span><span class="p">:</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">circle</span><span class="p">(</span><span class="n">out</span><span class="p">,(</span><span class="n">ROI</span><span class="p">),</span><span class="mi">2</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span><span class="mi">255</span><span class="p">,</span><span class="mi">255</span><span class="p">),</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ROI_POINTS</span><span class="p">)</span><span class="o">==</span><span class="mi">4</span><span class="p">:</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">fillPoly</span><span class="p">(</span><span class="n">shapes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">([</span><span class="n">ROI_POINTS</span><span class="p">]),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+            
+            <span class="n">BL</span><span class="p">,</span><span class="n">TL</span><span class="p">,</span><span class="n">TR</span><span class="p">,</span><span class="n">BR</span> <span class="o">=</span> <span class="n">ROI_POINTS</span>
+            
+            
+            
+            
+            <span class="n">width</span><span class="p">,</span><span class="n">height</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">padding</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.25</span> <span class="o">*</span> <span class="n">width</span><span class="p">)</span>
+            <span class="n">DESIRED_ROI_POINTS</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">([</span>
+              <span class="p">[</span><span class="n">padding</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="c1"># Top-left corner</span>
+              <span class="p">[</span><span class="n">padding</span><span class="p">,</span> <span class="n">height</span><span class="p">],</span> <span class="c1"># Bottom-left corner         </span>
+              <span class="p">[</span><span class="n">width</span><span class="o">-</span><span class="n">padding</span><span class="p">,</span> <span class="n">height</span><span class="p">],</span> <span class="c1"># Bottom-right corner</span>
+              <span class="p">[</span><span class="n">width</span><span class="o">-</span><span class="n">padding</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="c1"># Top-right corner</span>
+            <span class="p">])</span>
+            <span class="n">np_ROI_POINTS</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">ROI_POINTS</span><span class="p">)</span>
+            <span class="n">np_ROI_POINTS</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">bot_adj</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">np_ROI_POINTS</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">top_adj</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">np_ROI_POINTS</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">+=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">top_adj</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">np_ROI_POINTS</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">+=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">bot_adj</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">warped_frame</span><span class="p">,</span><span class="n">inv_mat</span> <span class="o">=</span> <span class="n">perspective_transform</span><span class="p">(</span>
+                <span class="n">frame</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">width</span><span class="p">,</span><span class="n">height</span><span class="p">),</span>
+                <span class="n">np_ROI_POINTS</span><span class="p">,</span>
+                <span class="n">DESIRED_ROI_POINTS</span><span class="p">)</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s2">&quot;warped frame&quot;</span><span class="p">,</span><span class="n">warped_frame</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">shapes</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">addWeighted</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="n">shapes</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mi">0</span><span class="p">)[</span><span class="n">mask</span><span class="p">]</span>
+
+        <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s2">&quot;orig_frame&quot;</span><span class="p">,</span><span class="n">out</span><span class="p">)</span>
+        
+        
+        <span class="n">key</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFF</span>
+        
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s2">&quot;q&quot;</span><span class="p">):</span>
+            <span class="k">break</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s2">&quot;i&quot;</span><span class="p">):</span>
+            <span class="n">top_adj</span><span class="o">+=</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s2">&quot;k&quot;</span><span class="p">):</span>
+            <span class="n">top_adj</span><span class="o">-=</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s2">&quot;j&quot;</span><span class="p">):</span>
+            <span class="n">bot_adj</span><span class="o">-=</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s2">&quot;l&quot;</span><span class="p">):</span>
+            <span class="n">bot_adj</span><span class="o">+=</span><span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s2">&quot;z&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ROI_POINTS</span><span class="p">)</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">ROI_POINTS</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            
+        <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s2">&quot;s&quot;</span><span class="p">):</span>
+            <span class="n">ROI_json</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;ROI_POINTS&#39;</span><span class="p">:</span><span class="n">np_ROI_POINTS</span>
+                <span class="p">}</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./ROI_JSON.json&#39;</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">ROI_json</span><span class="p">,</span><span class="n">f</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SAVED TO </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s1">&#39;./&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">/ROI_POINTS.json&quot;</span><span class="p">)</span>
+
+    <span class="n">cam</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+    <span class="n">cv2</span><span class="o">.</span><span class="n">destroyAllWindows</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span><span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">_main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Nicholas Thorpe.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
